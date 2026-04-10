@@ -1905,8 +1905,12 @@ function getMemberStats(member){
   var playedGames=getMemberPlayedGames(member);
   var playedScores=playedGames.map(function(g){return scoreNumber(g.score);}).filter(function(v){return v!==null;});
   var reviewScores=reviewEntries.map(function(rv){return scoreNumber(rv.score);}).filter(function(v){return v!==null;});
+  var key=canonicalMemberName(member);
+  var liveEntries=(firebaseReviews||[]).filter(function(rv){
+    return canonicalMemberName(rv.memberName)===key;
+  });
   return {
-    exp: uniqueStrings(reviewEntries.map(function(rv){return rv.gameName;})).length,
+    exp: uniqueStrings(liveEntries.map(function(rv){return rv.gameName;})).length,
     avg: playedScores.length?round1(playedScores.reduce(function(sum,v){return sum+v;},0)/playedScores.length):0,
     played: playedGames.length,
     reviewCount: reviewEntries.length,
