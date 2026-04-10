@@ -979,6 +979,22 @@ body::before{
 }
 .member-del-btn:hover{color:#ef4444;background:#ef444420;}
 .member-card-btn{position:relative;}
+
+/* 관리자 버튼 */
+.admin-toggle-btn{
+  position:fixed;bottom:1.2rem;right:1.2rem;z-index:500;
+  width:44px;height:44px;border-radius:50%;
+  background:#1a1008;border:1px solid #3a2a10;
+  color:#6a5028;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);
+  transition:all .2s;
+}
+.admin-toggle-btn:hover{border-color:var(--gold-dark);color:var(--gold-dark);}
+.admin-toggle-btn.admin-active{
+  background:#4a2e0a;border-color:var(--gold);color:var(--gold);
+  box-shadow:0 0 12px #c9a84c60;
+}
 </style>
 <body>
 
@@ -1014,6 +1030,9 @@ body::before{
     회원 명부
   </button>
 </div>
+<button class="admin-toggle-btn" id="adminToggleBtn" onclick="toggleAdminMode()" title="관리자 모드">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+</button>
 
 <div id="board-page" class="page">
   <div class="page-deco">✦ ── ── ── ── ── ── ── ── ── ✦</div>
@@ -1913,20 +1932,20 @@ function getMemberPlayedGames(member){
   return Object.keys(playedMap).map(function(gameName){return playedMap[gameName];});
 }
 function getMemberStats(member){
-  var reviewEntries=getMemberReviewEntries(member);
-  var playedGames=getMemberPlayedGames(member);
-  var playedScores=playedGames.map(function(g){return scoreNumber(g.score);}).filter(function(v){return v!==null;});
-  var reviewScores=reviewEntries.map(function(rv){return scoreNumber(rv.score);}).filter(function(v){return v!==null;});
   var key=canonicalMemberName(member);
+  var reviewEntries=getMemberReviewEntries(member);
+  var reviewScores=reviewEntries.map(function(rv){return scoreNumber(rv.score);}).filter(function(v){return v!==null;});
   var liveEntries=(firebaseReviews||[]).filter(function(rv){
     return canonicalMemberName(rv.memberName)===key;
   });
-  return {
-    exp: uniqueStrings(liveEntries.map(function(rv){return rv.gameName;})).length,
-    avg: playedScores.length?round1(playedScores.reduce(function(sum,v){return sum+v;},0)/playedScores.length):0,
-    played: playedGames.length,
-    reviewCount: reviewEntries.length,
-    reviewAvg: reviewScores.length?round1(reviewScores.reduce(function(sum,v){return sum+v;},0)/reviewScores.length):0
+  var played=0;
+  getMergedGames().forEach(function(g){
+    if(g.scores&&(g.scores[key]!==undefined||g.scores[stripMemberAlias(key)]!==undefined))played++;
+  });
+  var avg=reviewScores.length?round1(reviewScores.reduce(function(s,v){return s+v;},0)/reviewScores.length):0;
+  return{
+    exp:uniqueStrings(liveEntries.map(function(rv){return rv.gameName;})).length,
+    avg:avg,played:played,reviewCount:reviewEntries.length,reviewAvg:avg
   };
 }
 
@@ -2562,6 +2581,21 @@ function confirmPw(){
     }
   }
 }
+
+function toggleAdminMode(){
+  if(isAdminUnlocked){
+    isAdminUnlocked=false;
+    document.getElementById('adminToggleBtn').classList.remove('admin-active');
+    showToast('\uad00\ub9ac\uc790 \ubaa8\ub4dc \ud574\uc81c');
+    renderMemberGrid();
+    return;
+  }
+  requireAdmin(function(){
+    document.getElementById('adminToggleBtn').classList.add('admin-active');
+    renderMemberGrid();
+    showToast('\u2726 \uad00\ub9ac\uc790 \ubaa8\ub4dc \ud65c\uc131\ud654');
+  });
+}
 function requireAdmin(onSuccess){
   if(isAdminUnlocked){
     if(typeof onSuccess==='function')onSuccess();
@@ -2733,22 +2767,19 @@ function renderMemberGrid(){
   var q=(document.getElementById('memberSearch').value||'').trim();
   var grid=document.getElementById('memberGrid');
   var list=getAllMemberNames();
-  var statsCache={};
-  // 렌더링 전 모든 stats 일괄 계산 (getAllReviews 1회 → 캐시 활용)
-  getAllMemberNames().forEach(function(name){statsCache[name]=getMemberStats(name);});
-  function getStatsCached(name){return statsCache[name]||{exp:0,avg:0,played:0,reviewCount:0,reviewAvg:0};}
-
   if(q)list=list.filter(function(m){return m.indexOf(q)>=0;});
-  if(memberSortMode==='exp')list.sort(function(a,b){return getStatsCached(b).exp-getStatsCached(a).exp;});
-  else if(memberSortMode==='avg')list.sort(function(a,b){return getStatsCached(b).avg-getStatsCached(a).avg;});
+  var statsCache={};
+  list.forEach(function(name){statsCache[name]=getMemberStats(name);});
+  function gs(name){return statsCache[name]||{exp:0,avg:0,played:0,reviewCount:0};}
+  if(memberSortMode==='exp')list.sort(function(a,b){return gs(b).exp-gs(a).exp;});
+  else if(memberSortMode==='avg')list.sort(function(a,b){return gs(b).avg-gs(a).avg;});
   else list.sort(function(a,b){return a.localeCompare(b,'ko');});
-
-  grid.innerHTML=list.map(function(m){
-    var s=getStatsCached(m);
+  var adminSection=isAdminUnlocked?'<div style="grid-column:1/-1"><button class="rec-add-btn" style="width:100%;justify-content:center;font-size:11px;padding:6px" onclick="addMember()">+ \ud68c\uc6d0 \ucd94\uac00</button></div>':'';
+  var html=list.map(function(m){
+    var s=gs(m);
     var lv=getLevel(s.exp);
     var lvColor=getLvColor(lv);
-    var nextLvExp=(lv+1)*5;
-    var curLvExp=lv*5;
+    var nextLvExp=(lv+1)*5;var curLvExp=lv*5;
     var pct=s.exp>0?Math.min(100,Math.round((s.exp-curLvExp)/(nextLvExp-curLvExp)*100)):0;
     var roles=getRoles(m);
     var primaryRole=roles[0]||'';
@@ -2764,10 +2795,11 @@ function renderMemberGrid(){
       +'</div>'
       +'<div class="lv-bar-wrap"><div class="lv-bar-fill" style="width:'+pct+'%;background:'+lvColor+'"></div></div>'
       +(s.avg>0?'<span class="member-avg-val">avg '+s.avg.toFixed(1)+'</span>':'')
-      +(s.reviewCount>0?'<span class="member-count">리뷰 '+s.reviewCount+'개</span>':(s.played>0?'<span class="member-count">플레이 '+s.played+'회</span>':''))
-      +(isAdminUnlocked?'<button class="member-del-btn" data-remove-member="'+m+'" title="회원 삭제">✕</button>':'')
+      +(s.reviewCount>0?'<span class="member-count">\ub9ac\ubdf0 '+s.reviewCount+'\uac1c</span>':(s.played>0?'<span class="member-count">\ud50c\ub808\uc774 '+s.played+'\ud68c</span>':''))
+      +(isAdminUnlocked?'<button class="member-del-btn" data-remove-member="'+m+'" title="\ud68c\uc6d0 \uc0ad\uc81c">\u2715</button>':'')
       +'</button>';
   }).join('');
+  grid.innerHTML=adminSection+html;
 }
 function showMember(name){
   activeMemName=canonicalMemberName(name);
