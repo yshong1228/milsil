@@ -2006,7 +2006,10 @@ bindQuery('games',gamesCol,function(snap){
   });
   if((function(){var _el=document.getElementById('records-page');return _el&&_el.classList.contains('active');})() ){
     renderStats();
-    filterGames();
+    // 열린 리뷰 폼에 입력 중이면 재렌더 스킵
+    var _gl=document.getElementById('gameList');
+    var _hasInput=_gl&&Array.prototype.some.call(_gl.querySelectorAll('input[type="text"],input[type="number"]'),function(el){return el.value.trim();});
+    if(!_hasInput)filterGames();
   }
   if((function(){var _el=document.getElementById('members-page');return _el&&_el.classList.contains('active');})() ){
     renderMemberGrid();
@@ -2223,11 +2226,27 @@ function filterGames(){
 }
 function renderGames(list){
   var el=document.getElementById('gameList');
+  if(!el)return;
   if(!list.length){
-    el.innerHTML='<div class="empty"><span class="empty-icon">📜</span>조건에 맞는 기록이 없습니다.</div>';
+    el.innerHTML='<div class="empty"><span class="empty-icon">\ud83d\udcdc</span>\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.</div>';
     return;
   }
+  // 입력 중인 리뷰 폼 감지 - 입력값이 있으면 재렌더 스킵
+  var activeInputs=el.querySelectorAll('input[type="text"],input[type="number"]');
+  for(var i=0;i<activeInputs.length;i++){
+    if(activeInputs[i].value.trim()){
+      return; // 입력 중 → 재렌더 생략
+    }
+  }
+  // 열린 카드/폼 상태 저장
+  var openCards=[];
+  var openForms=[];
+  el.querySelectorAll('.game-card.open-rec').forEach(function(card){openCards.push(card.id);});
+  el.querySelectorAll('.review-form.open').forEach(function(form){openForms.push(form.id);});
   el.innerHTML=list.map(function(g,i){return gameCardHTML(g,i);}).join('');
+  // 열린 상태 복원
+  openCards.forEach(function(id){var el2=document.getElementById(id);if(el2)el2.classList.add('open-rec');});
+  openForms.forEach(function(id){var el2=document.getElementById(id);if(el2)el2.classList.add('open');});
 }
 function diffOptionsHTML(selected){
   var cur=parseInt(selected,10)||0;
