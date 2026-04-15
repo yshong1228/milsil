@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
   <link rel="icon" href="data:,">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>밀실극장 파티 게시판</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -36,7 +36,7 @@ body{
     radial-gradient(ellipse at 90% 75%,#2e180850 0%,transparent 45%),
     radial-gradient(ellipse at 50% 50%,#3a220e30 0%,transparent 70%);
   color:var(--ink);
-  min-height:100vh;
+  min-height:100vh;min-height:-webkit-fill-available;height:-webkit-fill-available;
 }
 
 /* 배경 목재 질감 */
@@ -814,7 +814,7 @@ body::before{
 .autocomplete-list{
   position:absolute;top:100%;left:0;right:0;z-index:200;
   background:#1e1608;border:1px solid var(--gold-dark);border-top:none;border-radius:0 0 4px 4px;
-  max-height:200px;overflow-y:auto;display:none;
+  max-height:200px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;
 }
 .autocomplete-list.open{display:block}
 .ac-item{
@@ -1048,8 +1048,8 @@ body::before{
       <div class="form-group full">
         <label>모집 인원</label>
         <div class="member-row">
-          <div class="member-field"><span class="gender-label">⚔ 남자</span><input type="number" id="fMale" min="0" value="0"><span style="font-size:12px;color:var(--ink-dim)">명</span></div>
-          <div class="member-field"><span class="gender-label">✦ 여자</span><input type="number" id="fFemale" min="0" value="0"><span style="font-size:12px;color:var(--ink-dim)">명</span></div>
+          <div class="member-field"><span class="gender-label">⚔ 남자</span><input type="number" inputmode="decimal" id="fMale" min="0" value="0"><span style="font-size:12px;color:var(--ink-dim)">명</span></div>
+          <div class="member-field"><span class="gender-label">✦ 여자</span><input type="number" inputmode="decimal" id="fFemale" min="0" value="0"><span style="font-size:12px;color:var(--ink-dim)">명</span></div>
         </div>
       </div>
       <div class="form-group"><label>작성자 비밀번호</label><input type="password" id="fEventPw" maxlength="4" inputmode="numeric" placeholder="4자리 숫자"></div>
@@ -1097,8 +1097,6 @@ body::before{
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
-
-var gamesDataEl = document.getEle
 
 var gamesDataEl = document.getElementById('gamesData');
 var GAMES = gamesDataEl ? JSON.parse(gamesDataEl.textContent) : [];
@@ -1491,10 +1489,14 @@ async function submitEvent(){
 }
 
 async function performDeleteEvent(id){
+  try{
+
   if(!confirm('이 공고를 철회하시겠습니까?'))return;
   openCards.delete(id);
   await col.doc(id).delete();
   showToast('공고가 철회되었습니다');
+  }catch(_e){console.error('performDeleteEvent error',_e);}
+
 }
 
 function deleteEvent(id,e){
@@ -1705,7 +1707,7 @@ bindQuery('events',col,function(snap){
 
 
 // ══════ 모험 기록부 + 회원 명부 JS ══════
-var GAMES = JSON.parse(document.getElementById('gamesData').textContent);
+GAMES = JSON.parse(document.getElementById('gamesData').textContent);
 var LEGACY_MEMBER_STATS = JSON.parse(document.getElementById('memberStatsData').textContent);
 var LEGACY_MEMBER_GAMES = {};
 var STATIC_MEMBER_NAMES = JSON.parse(document.getElementById('membersListData').textContent);
@@ -1716,7 +1718,7 @@ var memberRoles = {};
 var addedMembers = [];
 var activeMemName = '';
 var _rc=null,_ac={},_dc={};
-var openRecs = new Set();
+openRecs = new Set();
 var firebaseGames = [];
 var firebaseReviews = [];
 var gamesCol = db.collection('games');
@@ -1767,7 +1769,7 @@ function starToNumber(str){
 }
 function scoreNumber(v){
   if(v===null||v===undefined||v==='')return null;
-  var n=parseFloat(v);
+  n=parseFloat(v);
   return isNaN(n)?null:n;
 }
 function round1(n){
@@ -1790,7 +1792,7 @@ function getMergedGames(){
   return Object.keys(map).map(function(name){return map[name];});
 }
 function getGameByName(name){
-  var list=getMergedGames();
+  list=getMergedGames();
   for(var i=0;i<list.length;i++){
     if(list[i].name===name)return list[i];
   }
@@ -2072,7 +2074,7 @@ bindQuery('reviews',reviewsCol,function(snap){
 });
 
 function acSearch(val){
-  var list=document.getElementById('acList');
+  list=document.getElementById('acList');
   if(!val||val.length<1){list.classList.remove('open');return;}
   var q=val.toLowerCase().replace(/\s/g,'');
   var all=getMergedGames().map(function(g){return g.name;});
@@ -2129,7 +2131,7 @@ function switchTab(tab){
 }
 
 function toggleRecForm(){
-  var fc=document.getElementById('recFormCard');
+  fc=document.getElementById('recFormCard');
   if(fc.classList.contains('open')){closeRecForm();return;}
   recEditId=null;
   document.getElementById('recFormTitle').textContent='✦ 새 게임 기록 추가 ✦';
@@ -2144,7 +2146,7 @@ function closeRecForm(){
   recEditId=null;
 }
 async function submitGame(){
-  var name=document.getElementById('rfName').value.trim();
+  name=document.getElementById('rfName').value.trim();
   if(!name){alert('게임명은 필수입니다.');return;}
   var data={
     name:name,
@@ -2152,7 +2154,7 @@ async function submitGame(){
     players:document.getElementById('rfPlayers').value.trim(),
     updatedAt:serverTimestampValue()
   };
-  var btn=document.getElementById('recSubmitBtn');
+  btn=document.getElementById('recSubmitBtn');
   btn.textContent='저장 중...';
   btn.disabled=true;
   try{
@@ -2173,16 +2175,20 @@ async function submitGame(){
   }
 }
 async function deleteGame(id,e){
+  try{
+
   if(e)e.stopPropagation();
   if(!confirm('이 기록을 삭제하시겠습니까?'))return;
   await gamesCol.doc(id).delete();
   showToast('기록이 삭제되었습니다');
+  }catch(_e){console.error('deleteGame error',_e);}
+
 }
 function editGameByCard(btn,e){
   if(e)e.stopPropagation();
   var card=btn.closest('[data-fbid]');
   if(!card)return;
-  var id=card.getAttribute('data-fbid');
+  id=card.getAttribute('data-fbid');
   var g=firebaseGames.find(function(x){return x.id===id;});
   if(!g)return;
   recEditId=id;
@@ -2232,7 +2238,7 @@ function filterGames(){
   var diff=document.getElementById('recDiff').value;
   var score=document.getElementById('recScore').value;
   var players=document.getElementById('recPlayers').value;
-  var list=getMergedGames().slice();
+  list=getMergedGames().slice();
 
   if(q)list=list.filter(function(g){return g.name.toLowerCase().indexOf(q)>=0;});
   if(diff)list=list.filter(function(g){return getGameDiffString(g.name)===diff;});
@@ -2242,7 +2248,7 @@ function filterGames(){
   else if(score==='5-')list=list.filter(function(g){return getGameAvg(g.name)<5&&getGameAvg(g.name)>0;});
   if(players){
     list=list.filter(function(g){
-      var n=parseInt((g.players||'0').match(/\d+/)||['0'],10);
+      n=parseInt((g.players||'0').match(/\d+/)||['0'],10);
       return players==='9+'?n>=9:n===parseInt(players,10);
     });
   }
@@ -2258,7 +2264,7 @@ function filterGames(){
   renderGames(list);
 }
 function renderGames(list){
-  var el=document.getElementById('gameList');
+  el=document.getElementById('gameList');
   if(!el)return;
   if(!list.length){
     el.innerHTML='<div class="empty"><span class="empty-icon">\ud83d\udcdc</span>\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.</div>';
@@ -2272,7 +2278,7 @@ function renderGames(list){
     }
   }
   // 열린 카드/폼 상태 저장
-  var openCards=[];
+  openCards=[];
   var openForms=[];
   el.querySelectorAll('.game-card.open-rec').forEach(function(card){openCards.push(card.id);});
   el.querySelectorAll('.review-form.open').forEach(function(form){openForms.push(form.id);});
@@ -2378,7 +2384,7 @@ function toggleRec(rank){
 
 document.addEventListener('keydown',function(e){
   if(e.key!=='Enter')return;
-  var el=e.target;
+  el=e.target;
   if(!el.classList.contains('rf-text'))return;
   var form=el.closest('.review-form');
   if(!form)return;
@@ -2433,7 +2439,7 @@ function toggleReviewForm(gname,rank,e){
 async function submitReview(gameName,rank,e){
   if(e)e.stopPropagation();
   var rawName=(document.getElementById('rvn_'+rank).value||'').trim();
-  var name=canonicalMemberName(rawName);
+  name=canonicalMemberName(rawName);
   var score=scoreNumber(document.getElementById('rvs_'+rank).value);
   var diffNum=parseInt(document.getElementById('rvd_'+rank).value,10)||0;
   var review=(document.getElementById('rvt_'+rank).value||'').trim();
@@ -2485,10 +2491,14 @@ async function submitReview(gameName,rank,e){
   }
 }
 async function deleteReview(id,e){
+  try{
+
   if(e)e.stopPropagation();
   if(!confirm('리뷰를 삭제하시겠습니까?'))return;
   await reviewsCol.doc(id).delete();
   showToast('리뷰가 삭제되었습니다');
+  }catch(_e){console.error('deleteReview error',_e);}
+
 }
 
 function getLevel(exp){ return Math.floor((exp||0)/5); }
@@ -2572,7 +2582,7 @@ function confirmPw(){
   }
 
   if(pwContext.mode==='event'){
-    var ev=events.find(function(x){return x.id===pwContext.eventId;});
+    ev=events.find(function(x){return x.id===pwContext.eventId;});
     if(ev&&String(ev.authorPassword||'')===val){
       var done=pwContext.onSuccess;
       closePwModal();
@@ -2607,7 +2617,7 @@ function requireAdmin(onSuccess){
   return false;
 }
 function verifyEventOwner(id,onSuccess){
-  var ev=events.find(function(x){return x.id===id;});
+  ev=events.find(function(x){return x.id===id;});
   if(!ev)return false;
   if(isAdminUnlocked){
     if(typeof onSuccess==='function')onSuccess();
@@ -2642,7 +2652,7 @@ async function assignRole(member,role){
     return;
   }
   if(!member)return;
-  var ref=memberRolesCol.doc(member);
+  ref=memberRolesCol.doc(member);
   if(!role){
     await ref.delete().catch(function(){});
     showToast(member+' 역할 해제');
@@ -2671,7 +2681,7 @@ async function toggleRole(member,role){
     return;
   }
   if(!member||!role)return;
-  var ref=memberRolesCol.doc(member);
+  ref=memberRolesCol.doc(member);
   var currentRoles=getRoles(member);
   var nextRoles=currentRoles.indexOf(role)>=0
     ?currentRoles.filter(function(r){return r!==role;})
@@ -2721,7 +2731,7 @@ async function addMember(){
   }
   var input=document.getElementById('newMemberName');
   if(!input)return;
-  var name=normalizeMemberName(input.value);
+  name=normalizeMemberName(input.value);
   if(!name){alert('회원 이름을 입력해주세요.');return;}
   if(getAllMemberNames().indexOf(name)>=0){
     showToast('이미 등록된 회원입니다');
@@ -2760,7 +2770,7 @@ async function removeMember(name){
 function setMemberSort(mode){
   memberSortMode=mode;
   ['exp','avg','name'].forEach(function(m){
-    var el=document.getElementById('msort-'+m);
+    el=document.getElementById('msort-'+m);
     if(el)el.className='ms-btn'+(m===mode?' active':'');
   });
   renderMemberGrid();
@@ -2768,7 +2778,7 @@ function setMemberSort(mode){
 function renderMemberGrid(){
   var q=(document.getElementById('memberSearch').value||'').trim();
   var grid=document.getElementById('memberGrid');
-  var list=getAllMemberNames();
+  list=getAllMemberNames();
   if(q)list=list.filter(function(m){return m.indexOf(q)>=0;});
   var statsCache={};
   list.forEach(function(name){statsCache[name]=getMemberStats(name);});
@@ -2777,7 +2787,7 @@ function renderMemberGrid(){
   else if(memberSortMode==='avg')list.sort(function(a,b){return gs(b).avg-gs(a).avg;});
   else list.sort(function(a,b){return a.localeCompare(b,'ko');});
   var adminSection=isAdminUnlocked?'<div style="grid-column:1/-1"><button class="rec-add-btn" style="width:100%;justify-content:center;font-size:11px;padding:6px" onclick="addMember()">+ \ud68c\uc6d0 \ucd94\uac00</button></div>':'';
-  var html=list.map(function(m){
+  html=list.map(function(m){
     var s=gs(m);
     var lv=getLevel(s.exp);
     var lvColor=getLvColor(lv);
@@ -2863,6 +2873,7 @@ function renderMemberDetail(){
 
 
 
+</script>
   <div class="page-deco" style="margin-bottom:1rem">✦ ── 길드 모험 기록 ── ✦</div>
   <div class="stat-row" id="statRow"></div>
 
