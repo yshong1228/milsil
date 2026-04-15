@@ -1,0 +1,989 @@
+:root{
+  --gold:#c9a84c;
+  --gold-light:#e8c96a;
+  --gold-dark:#8a6820;
+  --parchment:#1a1408;
+  --parchment-mid:#221b0a;
+  --parchment-light:#2e2410;
+  --ink:#d4b896;
+  --ink-dim:#b89a6a;
+  --ink-faint:#7a6a4a;
+  --blood:#8b1a1a;
+  --blood-light:#c0392b;
+  --emerald:#1a4a2a;
+  --emerald-light:#2ecc71;
+  --steel:#2a3040;
+  --board-bg:#3d2810;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Noto Serif KR',serif;
+  background-color:#4a2e12;
+  background-image:
+    repeating-linear-gradient(92deg,#00000018 0px,transparent 1px,transparent 55px,#00000010 55px,transparent 56px),
+    repeating-linear-gradient(178deg,#00000014 0px,transparent 2px,transparent 90px,#c9a84c08 90px,transparent 92px),
+    repeating-linear-gradient(4deg,transparent 0px,transparent 35px,#00000012 35px,transparent 36px),
+    radial-gradient(ellipse at 10% 25%,#6b3d1850 0%,transparent 45%),
+    radial-gradient(ellipse at 90% 75%,#2e180850 0%,transparent 45%),
+    radial-gradient(ellipse at 50% 50%,#3a220e30 0%,transparent 70%);
+  color:var(--ink);
+  min-height:100vh;
+}
+
+/* 배경 목재 질감 */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    repeating-linear-gradient(90deg,transparent,transparent 3px,#ffffff04 3px,#ffffff04 4px,transparent 4px,transparent 8px),
+    repeating-linear-gradient(180deg,transparent,transparent 60px,#00000018 60px,#00000018 62px);
+  pointer-events:none;z-index:0;
+}
+
+/* ── 상단 길드 간판 ── */
+.guild-header{
+  position:sticky;top:0;z-index:100;
+  background:linear-gradient(180deg,#2a1608 0%,#1e1005 100%);
+  border-bottom:2px solid var(--gold-dark);
+  padding:0 1.5rem;
+  height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 4px 20px #000a;
+}
+.guild-header::before,.guild-header::after{
+  content:'⚔';
+  font-size:20px;
+  color:var(--gold-dark);
+  opacity:.6;
+}
+.guild-title{
+  font-family:'Cinzel',serif;
+  font-size:17px;font-weight:700;
+  color:var(--gold);
+  letter-spacing:2px;
+  text-align:center;
+  text-shadow:0 0 20px #c9a84c50;
+  display:flex;align-items:center;gap:10px;
+}
+.guild-title .ornament{color:var(--gold-dark);font-size:13px}
+.live-rune{
+  width:8px;height:8px;border-radius:50%;
+  background:#4ade80;
+  box-shadow:0 0 6px #4ade80;
+  animation:runeGlow 2s infinite;
+}
+@keyframes runeGlow{0%,100%{opacity:1;box-shadow:0 0 6px #4ade80}50%{opacity:.3;box-shadow:0 0 2px #4ade80}}
+
+.post-btn{
+  background:linear-gradient(135deg,#8a6820,#c9a84c,#8a6820);
+  color:#0d0a05;
+  border:1px solid var(--gold);
+  border-radius:4px;
+  padding:8px 16px;
+  font-size:13px;font-weight:700;
+  cursor:pointer;
+  font-family:'Cinzel',serif;
+  letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;
+  white-space:nowrap;
+  transition:all .2s;
+  box-shadow:0 2px 8px #c9a84c30,inset 0 1px 0 #e8c96a60;
+}
+.post-btn:hover{background:linear-gradient(135deg,#c9a84c,#e8c96a,#c9a84c);box-shadow:0 4px 16px #c9a84c50}
+
+/* ── 페이지 ── */
+.page{max-width:800px;margin:0 auto;padding:2rem 1rem 5rem;position:relative;z-index:1}
+
+/* 장식 줄 */
+.page-deco{
+  text-align:center;
+  color:var(--gold-dark);
+  font-size:13px;
+  letter-spacing:4px;
+  margin-bottom:1.5rem;
+  opacity:.7;
+}
+
+/* ── 등록 폼 (양피지 스크롤) ── */
+.form-scroll{
+  background:linear-gradient(180deg,#2a1c08,#221608,#2a1c08);
+  border:1px solid var(--gold-dark);
+  border-radius:4px;
+  padding:1.5rem;
+  margin-bottom:1.5rem;
+  display:none;
+  position:relative;
+  box-shadow:0 8px 32px #000a,inset 0 0 60px #c9a84c08;
+}
+.form-scroll::before,.form-scroll::after{
+  content:'';
+  position:absolute;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold-dark),var(--gold),var(--gold-dark),transparent);
+  opacity:.5;
+}
+.form-scroll::before{top:0}
+.form-scroll::after{bottom:0}
+.form-scroll.open{display:block}
+.scroll-title{
+  font-family:'Cinzel',serif;
+  font-size:14px;font-weight:600;
+  color:var(--gold);
+  letter-spacing:1.5px;
+  text-align:center;
+  margin-bottom:1.25rem;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--ink-faint);
+}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;color:var(--gold-dark);font-weight:600;letter-spacing:1px;text-transform:uppercase;font-family:'Cinzel',serif}
+.form-group input,.form-group textarea{
+  border:1px solid var(--ink-faint);
+  border-radius:3px;
+  padding:8px 10px;
+  font-size:14px;
+  color:var(--ink);
+  background:#150f05;
+  font-family:'Noto Serif KR',serif;
+  resize:none;
+  transition:border-color .2s;
+}
+.form-group input:focus,.form-group textarea:focus{outline:none;border-color:var(--gold-dark)}
+.member-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.member-field{display:flex;align-items:center;gap:8px;border:1px solid var(--ink-faint);border-radius:3px;padding:7px 10px;background:#150f05}
+.member-field:focus-within{border-color:var(--gold-dark)}
+.gender-label{font-size:12px;color:var(--ink-dim);white-space:nowrap;font-family:'Cinzel',serif}
+.member-field input{border:none;background:none;width:50px;font-size:14px;color:var(--ink);font-family:inherit}
+.member-field input:focus{outline:none}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.btn-cancel{
+  border:1px solid var(--ink-faint);background:transparent;color:var(--ink-dim);
+  border-radius:3px;padding:8px 14px;font-size:13px;cursor:pointer;
+  font-family:'Cinzel',serif;letter-spacing:.5px;
+}
+.btn-cancel:hover{border-color:var(--ink-dim);color:var(--ink)}
+.btn-post{
+  background:linear-gradient(135deg,#6a4a10,#c9a84c,#6a4a10);
+  color:#0d0a05;border:1px solid var(--gold-dark);
+  border-radius:3px;padding:8px 18px;font-size:13px;cursor:pointer;
+  font-family:'Cinzel',serif;font-weight:700;letter-spacing:.5px;
+  box-shadow:inset 0 1px 0 #e8c96a50;
+}
+.btn-post:hover{background:linear-gradient(135deg,#c9a84c,#e8c96a,#c9a84c)}
+
+/* ── 필터/정렬 ── */
+.filter-row{display:flex;gap:8px;margin-bottom:1.25rem;align-items:center;flex-wrap:wrap}
+.filter-row span{font-size:11px;color:#b89a6a;font-family:'Cinzel',serif;letter-spacing:.5px}
+.f-btn{
+  font-size:11px;border:1px solid var(--ink-faint);border-radius:3px;
+  padding:4px 12px;background:transparent;color:var(--ink-dim);cursor:pointer;
+  font-family:'Cinzel',serif;letter-spacing:.3px;transition:all .2s;
+}
+.f-btn:hover{border-color:var(--gold-dark);color:var(--gold-dark)}
+.f-btn.active{background:#2a1a04;border-color:var(--gold-dark);color:var(--gold)}
+
+/* ── 섹션 헤더 ── */
+.section-head{
+  display:flex;align-items:center;gap:10px;
+  margin:1.5rem 0 10px;
+}
+.section-head-line{flex:1;height:1px;background:linear-gradient(90deg,var(--gold-dark),transparent)}
+.section-head-line.rev{background:linear-gradient(90deg,transparent,var(--gold-dark))}
+.section-head-label{
+  font-family:'Cinzel',serif;font-size:11px;font-weight:600;
+  color:var(--gold-dark);letter-spacing:2px;white-space:nowrap;
+}
+
+/* ── 퀘스트 카드 (양피지 공고문) ── */
+.quest-card{
+  position:relative;
+  background:linear-gradient(160deg,#241a08 0%,#1c1406 40%,#241a08 100%);
+  border:1px solid #5a3e18;
+  border-radius:3px;
+  margin-bottom:10px;
+  overflow:hidden;
+  transition:border-color .2s,box-shadow .2s;
+  box-shadow:0 2px 12px #0006;
+}
+.quest-card::before{
+  content:'';
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 28px,#c9a84c04 28px,#c9a84c04 29px);
+  pointer-events:none;
+}
+.quest-card:hover{border-color:#5a4020;box-shadow:0 4px 20px #0008,0 0 0 1px #3a2a1030}
+.quest-card.open-card{border-color:var(--gold-dark);box-shadow:0 6px 32px #0009,0 0 20px #c9a84c10}
+.quest-card.past-card{
+  background:linear-gradient(160deg,#1e1608,#18120604);
+  border-color:#1e1a10;
+  opacity:.6;
+}
+.quest-card.past-card:hover{opacity:.75;border-color:#2a2416}
+.quest-card.full-card:not(.past-card){border-color:#5a3800}
+
+/* 핀 장식 */
+.card-pin{
+  position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+  width:14px;height:14px;
+  background:radial-gradient(circle at 35% 35%,#8a8a8a,#3a3a3a);
+  border-radius:50%;
+  box-shadow:0 2px 4px #0008;
+  z-index:2;
+}
+.past-card .card-pin{background:radial-gradient(circle at 35% 35%,#3a3a3a,#1a1a1a)}
+
+/* 왼쪽 난이도 리본 */
+.card-ribbon{
+  position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--gold-dark),var(--gold),var(--gold-dark));
+}
+.past-card .card-ribbon{background:linear-gradient(180deg,#2a2a2a,#3a3a3a,#2a2a2a)}
+.full-card:not(.past-card) .card-ribbon{background:linear-gradient(180deg,#5a3800,#f59e0b,#5a3800)}
+
+/* ── 카드 요약 행 (접힌 상태) ── */
+.quest-summary{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px 14px 20px;
+  cursor:pointer;
+  user-select:none;-webkit-user-select:none;
+}
+
+.quest-num{
+  font-family:'Cinzel',serif;
+  font-size:10px;color:#7a6a4a;
+  letter-spacing:.5px;
+  flex-shrink:0;
+  writing-mode:vertical-rl;
+  text-orientation:mixed;
+  min-width:14px;
+}
+.past-card .quest-num{color:#5a4a28}
+
+.date-rune{
+  flex-shrink:0;
+  background:#120e04;
+  border:1px solid #2e2010;
+  border-radius:3px;
+  padding:6px 10px;
+  text-align:center;
+  min-width:52px;
+}
+.rune-day{font-family:'Cinzel',serif;font-size:18px;font-weight:700;line-height:1;color:var(--gold)}
+.rune-mon{font-size:10px;color:var(--gold-dark);margin-top:1px;letter-spacing:.5px}
+.rune-dow{font-size:10px;color:#a08858;margin-top:1px}
+.past-card .rune-day{color:#333}
+.past-card .rune-mon{color:#5a4a28}
+.past-card .rune-dow{color:#4a3a20}
+.past-card .date-rune{border-color:#2e2210;background:#1a1408}
+
+.quest-time{
+  font-size:11px;color:var(--ink-dim);
+  display:flex;align-items:center;gap:3px;
+  white-space:nowrap;flex-shrink:0;
+}
+.past-card .quest-time{color:#5a4a30}
+
+.quest-name{
+  font-family:'Noto Serif KR',serif;
+  font-size:15px;font-weight:600;
+  color:var(--ink);
+  flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .2s;
+}
+.quest-card:hover .quest-name{color:#e0c8a0}
+.past-card .quest-name{color:#6a5a3a}
+
+.quest-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* 상태 배지 */
+.q-badge{
+  font-family:'Cinzel',serif;
+  font-size:10px;font-weight:600;
+  letter-spacing:.5px;
+  border-radius:2px;
+  padding:3px 9px;
+  display:flex;align-items:center;gap:4px;
+  white-space:nowrap;
+}
+.badge-active{background:#0d200d;color:#4ade80;border:1px solid #1a4a1a;box-shadow:0 0 8px #4ade8015}
+.badge-full{background:#3d2000;color:#f59e0b;border:1px solid #6a3800;box-shadow:0 0 8px #f59e0b15}
+.badge-ended{background:#2a2010;color:#7a6840;border:1px solid #3a3020}
+
+.chevron-rune{
+  color:var(--ink-faint);
+  transition:transform .3s,color .2s;
+  flex-shrink:0;
+}
+.open-card .chevron-rune{transform:rotate(180deg);color:var(--gold-dark)}
+.past-card .chevron-rune{color:#5a4a28}
+
+/* ── 펼쳐진 상세 ── */
+.quest-detail{display:none;border-top:1px solid #2a1e08}
+.open-card .quest-detail{display:block}
+
+.detail-body{padding:16px 20px}
+
+/* 퀘스트 설명 두루마리 */
+.quest-note{
+  background:#120e04;
+  border:1px solid #2a1e08;
+  border-left:3px solid var(--gold-dark);
+  border-radius:0 3px 3px 0;
+  padding:10px 14px;
+  font-size:13px;color:var(--ink-dim);
+  line-height:1.7;
+  margin-bottom:14px;
+  font-style:italic;
+}
+.quest-note::before{content:'📜 ';font-style:normal;font-size:12px}
+
+/* 모집 슬롯 */
+.slots-label{
+  font-family:'Cinzel',serif;font-size:11px;color:var(--gold-dark);
+  letter-spacing:1.5px;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.slots-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--ink-faint),transparent)}
+.slot-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.slot-box{
+  flex:1;min-width:130px;
+  background:#0f0c04;
+  border:1px solid #2a1e08;
+  border-radius:3px;padding:12px;
+  position:relative;overflow:hidden;
+}
+.slot-box.male-slot{border-top:2px solid #2563eb}
+.slot-box.female-slot{border-top:2px solid #be185d}
+.slot-box::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--ink-faint),transparent);
+}
+
+.slot-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.slot-label{font-family:'Cinzel',serif;font-size:12px;font-weight:600}
+.slot-label.male{color:#60a5fa}
+.slot-label.female{color:#f472b6}
+.slot-count{font-size:11px;color:#c8a878}
+.slot-count b{color:#e8d0a0}
+.slot-full-badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.5px;background:#3d2000;color:#f59e0b;border:1px solid #5a3800;border-radius:2px;padding:2px 6px}
+
+.slot-track{height:2px;background:#1a1408;border-radius:1px;margin-bottom:10px;overflow:hidden}
+.slot-fill{height:100%;border-radius:1px;transition:width .4s}
+.slot-fill.male{background:linear-gradient(90deg,#1d4ed8,#60a5fa)}
+.slot-fill.female{background:linear-gradient(90deg,#9d174d,#f472b6)}
+.slot-fill.maxed{background:linear-gradient(90deg,#92400e,#f59e0b)}
+
+.party-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;min-height:24px}
+.party-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  border-radius:2px;padding:3px 8px;font-size:11px;
+  font-family:'Noto Serif KR',serif;
+}
+.party-chip.male{background:#0a1830;color:#93c5fd;border:1px solid #1e3060}
+.party-chip.female{background:#25071a;color:#f9a8d4;border:1px solid #4a1035}
+.chip-x{background:none;border:none;cursor:pointer;color:inherit;opacity:.4;font-size:10px;padding:0;line-height:1}
+.chip-x:hover{opacity:1}
+.no-member{font-size:11px;color:#8a7050;font-style:italic}
+
+.join-field{display:flex;gap:6px}
+.join-input{
+  flex:1;background:#0a0704;border:1px solid #2a1e08;border-radius:2px;
+  padding:6px 10px;font-size:12px;color:var(--ink);
+  font-family:'Noto Serif KR',serif;min-width:0;
+  transition:border-color .2s;
+}
+.join-input:focus{outline:none;border-color:var(--gold-dark)}
+.join-input.err{border-color:var(--blood-light)}
+.join-btn-m,.join-btn-f{
+  border:none;border-radius:2px;padding:6px 12px;font-size:11px;
+  cursor:pointer;font-family:'Cinzel',serif;font-weight:600;
+  letter-spacing:.3px;white-space:nowrap;transition:all .2s;
+}
+.join-btn-m{background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;border:1px solid #3b82f6}
+.join-btn-m:hover{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+.join-btn-f{background:linear-gradient(135deg,#9d174d,#be185d);color:#fff;border:1px solid #db2777}
+.join-btn-f:hover{background:linear-gradient(135deg,#be185d,#db2777)}
+.ended-notice{
+  font-family:'Cinzel',serif;font-size:11px;color:#8a7050;
+  letter-spacing:1px;padding:6px 0;text-align:center;
+  border:1px solid #2a1e08;border-radius:2px;background:#0f0c04;
+}
+
+/* 댓글 */
+.tavern-talk{
+  border-top:1px solid var(--ink-faint);
+  padding-top:12px;margin-top:4px;
+}
+.talk-toggle{
+  font-family:'Cinzel',serif;font-size:11px;color:var(--ink-faint);
+  letter-spacing:.5px;cursor:pointer;background:none;border:none;
+  display:flex;align-items:center;gap:6px;transition:color .2s;
+  font-style:italic;
+}
+.talk-toggle:hover{color:var(--gold-dark)}
+.talk-section{display:none;margin-top:12px}
+.talk-section.open{display:block}
+.talk-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.talk-item{display:flex;gap:8px}
+.talk-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:#1a1408;border:1px solid var(--ink-faint);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;color:var(--gold-dark);flex-shrink:0;
+}
+.talk-body{flex:1}
+.talk-meta{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.talk-name{font-size:12px;font-weight:600;color:var(--ink);font-family:'Cinzel',serif}
+.talk-time{font-size:10px;color:#8a7050}
+.talk-text{font-size:13px;color:#c0a878;line-height:1.6;word-break:break-all}
+.del-talk{background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:10px;font-family:inherit;padding:0;transition:color .2s}
+.del-talk:hover{color:var(--blood-light)}
+.talk-input{display:flex;gap:6px}
+.talk-input input{
+  flex:1;border:1px solid var(--ink-faint);border-radius:2px;
+  padding:7px 10px;font-size:13px;color:var(--ink);
+  background:#0f0c04;font-family:'Noto Serif KR',serif;
+  transition:border-color .2s;
+}
+.talk-input input:focus{outline:none;border-color:var(--gold-dark)}
+.talk-name-in{width:60px;flex:none}
+.talk-send{
+  background:linear-gradient(135deg,#4a3008,#8a6820);
+  color:var(--gold-light);border:1px solid var(--gold-dark);
+  border-radius:2px;padding:7px 13px;font-size:12px;cursor:pointer;
+  font-family:'Cinzel',serif;font-weight:600;letter-spacing:.3px;
+  white-space:nowrap;transition:all .2s;
+}
+.talk-send:hover{background:linear-gradient(135deg,#8a6820,#c9a84c)}
+
+/* 수정/삭제 */
+.card-footer{
+  display:flex;justify-content:flex-end;gap:6px;
+  padding:8px 16px 10px;
+  border-top:1px solid #1e1608;
+}
+.f-act{
+  background:none;border:1px solid #2a1e08;border-radius:2px;
+  padding:4px 12px;font-size:11px;color:#a08858;
+  cursor:pointer;font-family:'Cinzel',serif;letter-spacing:.3px;
+  display:flex;align-items:center;gap:4px;transition:all .2s;
+}
+.f-act:hover{border-color:var(--gold-dark);color:var(--gold-dark)}
+.f-act.danger:hover{border-color:var(--blood);color:var(--blood-light)}
+
+/* 빈 상태 */
+.empty{
+  text-align:center;padding:4rem 1rem;
+  color:var(--ink-faint);font-size:14px;line-height:2.5;
+  font-family:'Cinzel',serif;letter-spacing:1px;
+}
+.empty .empty-icon{font-size:36px;display:block;margin-bottom:.5rem;opacity:.3}
+.loading{
+  text-align:center;padding:3rem;
+  color:var(--ink-faint);font-size:13px;
+  font-family:'Cinzel',serif;letter-spacing:2px;
+}
+
+/* 토스트 */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#2a1a04,#3a2508);
+  color:var(--gold);
+  border:1px solid var(--gold-dark);
+  padding:10px 22px;border-radius:3px;
+  font-size:13px;font-family:'Cinzel',serif;letter-spacing:.5px;
+  opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;
+  white-space:nowrap;box-shadow:0 4px 20px #000a;
+}
+.toast.show{opacity:1}
+
+@media(max-width:520px){
+  .form-grid{grid-template-columns:1fr}
+  .form-group.full{grid-column:1}
+  .slot-box{min-width:100%}
+  .guild-title{font-size:13px;letter-spacing:1px}
+}
+
+/* ── 탭 네비 ── */
+.tab-nav{
+  background:#2a1608;
+  border-bottom:1px solid var(--gold-dark);
+  display:flex;gap:0;padding:0 1.5rem;
+  position:sticky;top:64px;z-index:99;
+}
+.tab-btn{
+  font-family:'Cinzel',serif;font-size:12px;font-weight:600;
+  letter-spacing:.8px;color:#b89a6a;
+  background:none;border:none;border-bottom:2px solid transparent;
+  padding:11px 18px;cursor:pointer;display:flex;align-items:center;gap:7px;
+  transition:color .2s,border-color .2s;
+}
+.tab-btn:hover{color:var(--gold-dark)}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ── 기록부 페이지 ── */
+#records-page{display:none;max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem;position:relative;z-index:1}
+#records-page.active{display:block}
+#board-page.hidden{display:none}
+
+.rec-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+.rec-search{
+  flex:1;min-width:160px;
+  background:#1a1008;border:1px solid var(--gold-dark);border-radius:3px;
+  padding:8px 12px;font-size:13px;color:var(--ink);
+  font-family:'Noto Serif KR',serif;
+  transition:border-color .2s;
+}
+.rec-search::placeholder{color:#8a7050}
+.rec-search:focus{outline:none;border-color:var(--gold)}
+.rec-select{
+  background:#1a1008;border:1px solid #3a2a10;border-radius:3px;
+  padding:8px 10px;font-size:12px;color:#c0a070;
+  font-family:'Cinzel',serif;letter-spacing:.3px;cursor:pointer;
+}
+.rec-select:focus{outline:none;border-color:var(--gold-dark)}
+
+/* 통계 카드 */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
+.stat-box{
+  background:#1a1008;border:1px solid #3a2a10;border-radius:4px;
+  padding:12px 14px;text-align:center;
+}
+.stat-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--gold)}
+.stat-label{font-size:11px;color:#a08858;letter-spacing:.5px;margin-top:3px}
+
+/* 게임 카드 */
+.game-card{
+  background:linear-gradient(160deg,#241a08,#1c1406);
+  border:1px solid #4a3010;border-radius:3px;
+  margin-bottom:8px;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s;
+  position:relative;
+}
+.game-card::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 24px,#c9a84c03 24px,#c9a84c03 25px);pointer-events:none}
+.game-card:hover{border-color:#7a5020;box-shadow:0 4px 20px #0007}
+.game-card.open-rec{border-color:var(--gold-dark)}
+
+.game-summary{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;cursor:pointer;user-select:none;
+}
+.rank-num{
+  font-family:'Cinzel',serif;font-size:11px;color:#9a8060;
+  min-width:24px;text-align:right;flex-shrink:0;
+}
+.rank-num.gold{color:#f59e0b;font-weight:700;font-size:13px}
+.rank-num.silver{color:#aaa;font-weight:700;font-size:12px}
+.rank-num.bronze{color:#cd7f32;font-weight:700;font-size:12px}
+
+.score-ring{
+  width:44px;height:44px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-size:13px;font-weight:700;
+  border:2px solid;position:relative;
+}
+.score-ring.s-great{border-color:#4ade80;color:#4ade80;background:#0d2a0d}
+.score-ring.s-good{border-color:#86efac;color:#86efac;background:#0d200d}
+.score-ring.s-mid{border-color:#f59e0b;color:#f59e0b;background:#2a1a00}
+.score-ring.s-low{border-color:#f97316;color:#f97316;background:#2a0e00}
+.score-ring.s-bad{border-color:#ef4444;color:#ef4444;background:#2a0000}
+
+.game-meta-col{flex:1;min-width:0}
+.game-name-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.game-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-card:hover .game-title{color:#e0c8a0}
+.diff-stars{font-size:11px;color:#c9a84c;white-space:nowrap;flex-shrink:0}
+.game-info-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.g-info{font-size:11px;color:#b89a6a;display:flex;align-items:center;gap:3px}
+
+.game-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.parti-count{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:.3px;
+  background:#1a1408;border:1px solid #2e2010;border-radius:2px;
+  padding:3px 8px;color:var(--ink-dim);white-space:nowrap;
+}
+
+/* 게임 상세 */
+.game-detail{display:none;border-top:1px solid #2a1e08}
+.open-rec .game-detail{display:block}
+.game-detail-inner{padding:14px 16px}
+
+.score-bar-section{margin-bottom:14px}
+.sbar-label{font-family:'Cinzel',serif;font-size:11px;color:var(--gold-dark);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.sbar-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--ink-faint),transparent)}
+.score-bars{display:flex;flex-direction:column;gap:5px}
+.sbar-row{display:flex;align-items:center;gap:8px}
+.sbar-member{font-size:11px;color:#c0a070;min-width:34px;text-align:right;font-family:'Cinzel',serif}
+.sbar-track{flex:1;height:6px;background:#1a1408;border-radius:3px;overflow:hidden;position:relative}
+.sbar-fill{height:100%;border-radius:3px;transition:width .5s ease;position:relative}
+.sbar-fill.c-great{background:linear-gradient(90deg,#166534,#4ade80)}
+.sbar-fill.c-good{background:linear-gradient(90deg,#14532d,#86efac)}
+.sbar-fill.c-mid{background:linear-gradient(90deg,#78350f,#f59e0b)}
+.sbar-fill.c-low{background:linear-gradient(90deg,#7c2d12,#f97316)}
+.sbar-fill.c-bad{background:linear-gradient(90deg,#7f1d1d,#ef4444)}
+.sbar-score{font-size:11px;font-family:'Cinzel',serif;min-width:28px;color:#c0a070}
+.no-scores{font-size:12px;color:#8a7050;font-style:italic;padding:8px 0}
+
+.absent-section{margin-top:10px;padding-top:10px;border-top:1px solid #1e1608}
+.absent-label{font-size:10px;color:#9a8060;font-family:'Cinzel',serif;letter-spacing:.5px;margin-bottom:5px}
+.absent-names{font-size:11px;color:#7a6a4a;line-height:1.7}
+
+.owner-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  background:#2a1a04;border:1px solid #5a3800;border-radius:2px;
+  padding:2px 8px;font-size:10px;color:var(--gold-dark);
+  font-family:'Cinzel',serif;letter-spacing:.3px;
+}
+
+
+/* ── 기록 추가 폼 ── */
+.rec-form-card{
+  background:linear-gradient(180deg,#2a1c08,#221608,#2a1c08);
+  border:1px solid var(--gold-dark);border-radius:4px;
+  padding:1.25rem;margin-bottom:1.25rem;display:none;position:relative;
+  box-shadow:0 8px 32px #000a,inset 0 0 60px #c9a84c08;
+}
+.rec-form-card::before,.rec-form-card::after{
+  content:'';position:absolute;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold-dark),var(--gold),var(--gold-dark),transparent);
+  opacity:.5;
+}
+.rec-form-card::before{top:0}.rec-form-card::after{bottom:0}
+.rec-form-card.open{display:block}
+
+.score-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:6px;margin-top:8px;
+}
+.score-cell{
+  display:flex;align-items:center;gap:6px;
+  background:#150f05;border:1px solid #2a1e08;border-radius:3px;
+  padding:5px 8px;
+}
+.score-cell label{font-size:11px;color:#c0a070;flex:1;font-family:'Cinzel',serif}
+.score-cell input{
+  width:44px;background:none;border:none;border-bottom:1px solid #3a2a10;
+  color:var(--ink);font-size:12px;font-family:'Noto Serif KR',serif;
+  text-align:center;padding:2px 0;
+}
+.score-cell input:focus{outline:none;border-bottom-color:var(--gold-dark)}
+
+.star-select{display:flex;gap:6px;margin-top:4px}
+.star-btn{
+  background:none;border:1px solid #2a1e08;border-radius:2px;
+  padding:4px 10px;font-size:13px;cursor:pointer;color:var(--gold-dark);
+  font-family:'Cinzel',serif;transition:all .2s;
+}
+.star-btn:hover,.star-btn.active{background:#2a1a04;border-color:var(--gold);color:var(--gold)}
+
+.firebase-tag{
+  display:inline-flex;align-items:center;gap:3px;
+  background:#0d2510;border:1px solid #1a4a20;
+  color:#4ade80;font-size:9px;font-family:'Cinzel',serif;
+  letter-spacing:.3px;border-radius:2px;padding:1px 6px;
+  flex-shrink:0;
+}
+.rec-add-btn{
+  background:linear-gradient(135deg,#8a6820,#c9a84c,#8a6820);
+  color:#0d0a05;border:1px solid var(--gold);border-radius:4px;
+  padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;
+  font-family:'Cinzel',serif;letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+  box-shadow:0 2px 8px #c9a84c30,inset 0 1px 0 #e8c96a60;
+  transition:all .2s;
+}
+.rec-add-btn:hover{background:linear-gradient(135deg,#c9a84c,#e8c96a,#c9a84c)}
+.rec-controls-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:10px;flex-wrap:wrap}
+
+
+/* ── 탭 3 회원명부 ── */
+#members-page{display:none;max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem;position:relative;z-index:1}
+#members-page.active{display:block}
+
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:1.5rem}
+.member-card-btn{
+  background:#1a1008;border:1px solid #3a2a10;border-radius:6px;
+  padding:10px 8px;cursor:pointer;text-align:center;
+  font-family:'Cinzel',serif;font-size:12px;color:#c0a070;
+  transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+.member-card-btn:hover{border-color:var(--gold-dark);color:var(--gold);background:#241608}
+.member-card-btn.active-member{border-color:var(--gold);background:#2a1c04;color:var(--gold)}
+.member-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,#3a2010,#5a3820);
+  border:1px solid #5a3820;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:var(--gold);
+}
+.member-count{font-size:10px;color:#8a7050;letter-spacing:.3px}
+
+.member-detail{display:none;background:#1a1008;border:1px solid #3a2a10;border-radius:6px;padding:1.25rem;margin-bottom:1rem}
+.member-detail.open{display:block}
+.member-detail-header{display:flex;align-items:center;gap:14px;margin-bottom:1rem;padding-bottom:10px;border-bottom:1px solid #2a1e08}
+.member-avatar-lg{
+  width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#3a2010,#6a4020);
+  border:2px solid var(--gold-dark);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:var(--gold);
+}
+.member-stats{display:flex;gap:16px;margin-top:6px;flex-wrap:wrap}
+.mstat{text-align:center}
+.mstat-val{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--gold)}
+.mstat-label{font-size:10px;color:#8a7050;letter-spacing:.3px}
+.member-games-list{display:flex;flex-direction:column;gap:6px}
+.member-game-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 10px;background:#120e04;border:1px solid #241808;border-radius:4px;
+}
+.mg-score{
+  font-family:'Cinzel',serif;font-size:13px;font-weight:700;
+  min-width:36px;text-align:center;flex-shrink:0;
+}
+.mg-info{flex:1;min-width:0}
+.mg-name{font-size:13px;color:var(--ink);font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mg-review{font-size:11px;color:#8a7050;line-height:1.5;font-style:italic}
+.mg-empty{font-size:12px;color:#3a2a18;font-style:italic;text-align:center;padding:1rem}
+
+/* ── 기록부 개편 ── */
+.game-review-section{border-top:1px solid #1e1608;padding:12px 14px}
+.review-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.review-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 10px;background:#120e04;border:1px solid #1e1608;border-radius:4px;
+}
+.rv-score{
+  font-family:'Cinzel',serif;font-size:14px;font-weight:700;
+  min-width:36px;text-align:center;flex-shrink:0;padding-top:1px;
+}
+.rv-body{flex:1;min-width:0}
+.rv-header{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.rv-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:var(--ink)}
+.rv-time{font-size:10px;color:#5a4a28}
+.rv-text{font-size:12px;color:#a08858;line-height:1.5;word-break:break-all}
+.rv-del{background:none;border:none;cursor:pointer;color:#3a2a18;font-size:10px;font-family:inherit;padding:0;transition:color .2s;margin-left:auto;flex-shrink:0}
+.rv-del:hover{color:var(--blood-light)}
+.no-reviews{font-size:12px;color:#3a2418;font-style:italic;padding:6px 0;text-align:center}
+
+.write-review-btn{
+  background:linear-gradient(135deg,#4a3008,#7a5010);
+  color:var(--gold-light);border:1px solid var(--gold-dark);
+  border-radius:3px;padding:7px 14px;font-size:11px;font-weight:700;
+  cursor:pointer;font-family:'Cinzel',serif;letter-spacing:.5px;
+  display:flex;align-items:center;gap:5px;transition:all .2s;margin-bottom:8px;
+}
+.write-review-btn:hover{background:linear-gradient(135deg,#7a5010,#c9a84c)}
+
+.review-form{background:#0f0c04;border:1px solid #2a1e08;border-radius:4px;padding:10px 12px;display:none}
+.review-form.open{display:block}
+.review-form-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:flex-end}
+.rf-name{width:90px;flex:none}
+.rf-score{width:70px;flex:none}
+.rf-text{flex:1;min-width:120px}
+.rf-input{
+  background:#0a0704;border:1px solid #2a1e08;border-radius:3px;
+  padding:7px 9px;font-size:13px;color:var(--ink);
+  font-family:'Noto Serif KR',serif;width:100%;transition:border-color .2s;
+}
+.rf-input:focus{outline:none;border-color:var(--gold-dark)}
+.rf-label{font-size:10px;color:#8a7050;font-family:'Cinzel',serif;letter-spacing:.3px;margin-bottom:3px;display:block}
+.rf-submit{
+  background:linear-gradient(135deg,#6a4a10,#c9a84c);
+  color:#0d0a05;border:1px solid var(--gold-dark);border-radius:3px;
+  padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;
+  font-family:'Cinzel',serif;letter-spacing:.3px;white-space:nowrap;transition:all .2s;
+}
+.rf-submit:hover{background:linear-gradient(135deg,#c9a84c,#e8c96a)}
+
+/* 자동완성 */
+.autocomplete-wrap{position:relative}
+.autocomplete-list{
+  position:absolute;top:100%;left:0;right:0;z-index:200;
+  background:#1e1608;border:1px solid var(--gold-dark);border-top:none;border-radius:0 0 4px 4px;
+  max-height:200px;overflow-y:auto;display:none;
+}
+.autocomplete-list.open{display:block}
+.ac-item{
+  padding:8px 12px;font-size:13px;color:var(--ink);cursor:pointer;
+  border-bottom:1px solid #2a1e08;transition:background .15s;
+}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item.selected{background:#2a1c08;color:var(--gold)}
+.ac-match{color:var(--gold);font-weight:600}
+
+/* ── 회원 명부 개편 ── */
+.member-rank-badge{
+  font-size:9px;font-family:'Cinzel',serif;letter-spacing:.5px;
+  padding:2px 7px;border-radius:10px;border:1px solid;font-weight:600;
+  display:inline-block;margin-top:2px;
+}
+.member-exp{font-size:10px;color:#8a7050;margin-top:1px}
+.member-avg-val{font-size:11px;color:#c0a070;font-family:'Cinzel',serif}
+.mstat-avg{font-family:'Cinzel',serif;font-size:14px;font-weight:700}
+
+.member-game-row-score{
+  display:flex;align-items:center;gap:4px;flex-shrink:0;
+}
+.score-star{
+  font-size:12px;font-family:'Cinzel',serif;font-weight:700;min-width:28px;text-align:center;
+}
+.mg-diff{font-size:10px;color:#6a5028}
+.mg-date{font-size:10px;color:#5a4028}
+
+/* 탭 내 서브메뉴 */
+.members-sort-row{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.ms-btn{
+  font-size:11px;border:1px solid #2e2010;border-radius:3px;
+  padding:4px 10px;background:transparent;color:#8a7050;cursor:pointer;
+  font-family:'Cinzel',serif;letter-spacing:.3px;transition:all .2s;
+}
+.ms-btn:hover{border-color:var(--gold-dark);color:var(--gold-dark)}
+.ms-btn.active{background:#2a1a04;border-color:var(--gold-dark);color:var(--gold)}
+
+.member-search-input{
+  flex:1;min-width:120px;
+  background:#1a1008;border:1px solid #3a2a10;border-radius:3px;
+  padding:6px 10px;font-size:12px;color:var(--ink);
+  font-family:'Noto Serif KR',serif;
+}
+.member-search-input::placeholder{color:#4a3820}
+.member-search-input:focus{outline:none;border-color:var(--gold-dark)}
+
+
+/* ── 레벨/역할 시스템 ── */
+.member-level{
+  font-family:'Cinzel',serif;font-size:11px;font-weight:700;
+  display:flex;align-items:center;gap:3px;
+}
+.lv-badge{
+  font-family:'Cinzel',serif;font-size:9px;font-weight:700;
+  padding:1px 6px;border-radius:10px;border:1px solid;
+  letter-spacing:.3px;
+}
+.lv-bar-wrap{width:100%;height:3px;background:#1e1608;border-radius:2px;overflow:hidden;margin-top:2px}
+.lv-bar-fill{height:100%;border-radius:2px;transition:width .4s}
+
+/* 역할 색상 */
+.role-master{color:#ef4444!important}
+.role-detective{color:#7dd3fc!important}
+.role-actor{color:#f9a8d4!important}
+.role-genius{color:#1d4ed8!important}
+.role-persona{color:#a855f7!important}
+.role-badge{
+  font-size:9px;font-family:'Cinzel',serif;font-weight:700;
+  letter-spacing:.5px;padding:1px 7px;border-radius:10px;
+  border:1px solid;display:inline-block;
+}
+.role-badge.role-master{border-color:#ef444440;background:#ef444415}
+.role-badge.role-detective{border-color:#7dd3fc40;background:#7dd3fc15}
+.role-badge.role-actor{border-color:#f9a8d440;background:#f9a8d415}
+.role-badge.role-genius{border-color:#1d4ed840;background:#1d4ed815}
+.role-badge.role-persona{border-color:#a855f740;background:#a855f715}
+
+.role-select-panel{
+  background:#0f0c04;border:1px solid #2a1e08;border-radius:4px;
+  padding:10px 12px;margin-top:10px;display:none;
+}
+.role-select-panel.open{display:block}
+.role-select-title{font-size:11px;font-family:'Cinzel',serif;color:#8a7050;margin-bottom:8px;letter-spacing:.5px}
+.role-btns{display:flex;gap:6px;flex-wrap:wrap}
+.role-assign-btn{
+  font-size:11px;font-family:'Cinzel',serif;font-weight:700;
+  border-radius:10px;border:1px solid;padding:3px 10px;cursor:pointer;
+  background:transparent;letter-spacing:.3px;transition:all .2s;
+}
+.role-assign-btn:hover{opacity:.8}
+.role-assign-btn.none-btn{color:#5a4a28;border-color:#2a1e08;background:transparent}
+
+/* 스포일러 */
+.rv-spoiler-wrap{position:relative;overflow:hidden}
+.rv-spoiler-wrap.spoiler-unread{cursor:pointer}
+.rv-spoiler-overlay{
+  position:absolute;inset:0;
+  background:#120e04cc;
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:3px;
+  font-family:'Cinzel',serif;font-size:11px;color:#8a7050;
+  letter-spacing:.5px;transition:opacity .2s;
+}
+.rv-spoiler-wrap.revealed .rv-spoiler-overlay{display:none}
+.spoiler-toggle{display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;user-select:none}
+.spoiler-toggle input{cursor:pointer;accent-color:var(--gold-dark)}
+.spoiler-toggle span{font-size:11px;color:#8a7050;font-family:'Cinzel',serif}
+
+/* 역할 부여 버튼 */
+.assign-role-btn{
+  background:none;border:1px solid #2a1e08;border-radius:3px;
+  padding:4px 10px;font-size:10px;color:#6a5028;cursor:pointer;
+  font-family:'Cinzel',serif;letter-spacing:.3px;transition:all .2s;
+  display:flex;align-items:center;gap:4px;
+}
+.assign-role-btn:hover{border-color:var(--gold-dark);color:var(--gold-dark)}
+
+
+/* ── 비밀번호 모달 ── */
+.pw-modal-wrap{
+  position:fixed;inset:0;background:#000000cc;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+}
+.pw-modal-wrap.hidden{display:none}
+.pw-modal{
+  background:#1a1008;border:1px solid var(--gold-dark);border-radius:6px;
+  padding:1.5rem;min-width:280px;max-width:340px;width:90%;
+  box-shadow:0 8px 40px #000c;
+  position:relative;
+}
+.pw-modal::before,.pw-modal::after{
+  content:'';position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold-dark),var(--gold),var(--gold-dark),transparent);
+  opacity:.6;
+}
+.pw-modal::before{top:0}.pw-modal::after{bottom:0}
+.pw-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--gold);text-align:center;margin-bottom:1rem;letter-spacing:1px}
+.pw-input{
+  width:100%;background:#0f0c04;border:1px solid #3a2a10;border-radius:4px;
+  padding:10px 14px;font-size:18px;color:var(--gold);text-align:center;
+  font-family:'Cinzel',serif;letter-spacing:8px;margin-bottom:8px;
+}
+.pw-input:focus{outline:none;border-color:var(--gold-dark)}
+.pw-error{font-size:11px;color:#ef4444;text-align:center;margin-bottom:8px;font-family:'Cinzel',serif;height:16px}
+.pw-btns{display:flex;gap:8px}
+.pw-confirm{flex:1;background:linear-gradient(135deg,#6a4a10,#c9a84c);color:#0d0a05;border:1px solid var(--gold-dark);border-radius:4px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:.5px}
+.pw-cancel{background:none;border:1px solid #2a1e08;border-radius:4px;padding:9px 14px;font-size:13px;color:#6a5028;cursor:pointer;font-family:'Cinzel',serif}
+.pw-confirm:hover{background:linear-gradient(135deg,#c9a84c,#e8c96a)}
+
+
+/* 회원 카드 삭제 버튼 */
+.member-del-btn{
+  position:absolute;top:4px;right:4px;
+  background:none;border:none;cursor:pointer;
+  color:#3a2010;font-size:11px;padding:2px 4px;
+  border-radius:3px;line-height:1;
+  transition:color .15s,background .15s;
+  z-index:2;
+}
+.member-del-btn:hover{color:#ef4444;background:#ef444420;}
+.member-card-btn{position:relative;}
+
+/* 관리자 버튼 */
+.admin-toggle-btn{
+  position:fixed;bottom:1.2rem;right:1.2rem;z-index:500;
+  width:44px;height:44px;border-radius:50%;
+  background:#1a1008;border:1px solid #3a2a10;
+  color:#6a5028;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);
+  transition:all .2s;
+}
+.admin-toggle-btn:hover{border-color:var(--gold-dark);color:var(--gold-dark);}
+.admin-toggle-btn.admin-active{
+  background:#4a2e0a;border-color:var(--gold);color:var(--gold);
+  box-shadow:0 0 12px #c9a84c60;
+}
