@@ -894,7 +894,7 @@ function getMemberPlayedGames(member){
 var _playedByMember=null;
 function invalidatePlayedByMember(){_playedByMember=null;_playedGamesByMember=null;}
 function getPlayedByMember(){
-  if(_playedByMember)return _playedByMember;
+  if(_playedByMember && _playedGamesByMember)return _playedByMember;
   var m={};
   var idx={};
   var games=getMergedGames();
@@ -909,6 +909,14 @@ function getPlayedByMember(){
         (idx[canon]||(idx[canon]=new Set())).add(gname);
       }
     }
+  }
+  var reviews=getAllReviews();
+  for(var r=0;r<reviews.length;r++){
+    var rv=reviews[r];
+    if(!rv||!rv.gameName||!rv.memberName)continue;
+    var rcanon=canonicalMemberName(rv.memberName);
+    if(!rcanon)continue;
+    (idx[rcanon]||(idx[rcanon]=new Set())).add(rv.gameName);
   }
   _playedByMember=m;
   _playedGamesByMember=idx;
