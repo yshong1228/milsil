@@ -8,6 +8,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -41,6 +45,10 @@
   <button class="tab-btn" id="tab-members" onclick="switchTab('members')">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M11 7a3 3 0 100-6 3 3 0 000 6zM2 14c0-3.3 2.7-6 6-6h1M14 12a2 2 0 11-4 0 2 2 0 014 0zM12 10v4M10 12h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
     회원 명부
+  </button>
+  <button class="tab-btn" id="tab-findgame" onclick="switchTab('findgame')">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    게임 찾기
   </button>
 </div>
 <button class="admin-toggle-btn" id="adminToggleBtn" onclick="toggleAdminMode()" title="관리자 모드">
@@ -222,11 +230,51 @@
   </div>
   <div class="member-grid" id="memberGrid"></div>
   <div class="member-detail" id="memberDetail"></div>
+</div>
+
+<div id="findgame-page">
+  <div class="page-deco" style="margin-bottom:1rem">✦ ── 파티 매칭 ── ✦</div>
+  <div class="finder-control-row">
+    <label class="finder-total-label">총 인원</label>
+    <div class="finder-stepper" role="group" aria-label="총 인원 조절">
+      <button type="button" class="finder-step-btn" onclick="adjustFinderTotal(-1)" aria-label="감소">−</button>
+      <span class="finder-step-val" id="finderTotalVal">1</span>
+      <span class="finder-step-unit">명</span>
+      <button type="button" class="finder-step-btn" onclick="adjustFinderTotal(1)" aria-label="증가">+</button>
+    </div>
+    <span class="finder-total-hint">비회원 포함 가능</span>
+  </div>
+  <div class="finder-dropdown-wrap" id="finderDropdownWrap">
+    <input type="text" class="finder-dropdown-input" id="finderDropdownInput" placeholder="회원 추가 (이름 검색)..." oninput="handleFinderDropdownInput()" onfocus="openFinderDropdown()" autocomplete="off">
+    <div class="finder-dropdown-list" id="finderDropdownList" hidden></div>
+  </div>
+  <div class="finder-summary-row">
+    <span id="finderSummary" class="finder-summary">선택된 회원 0명</span>
+    <button class="ms-btn" id="finderClearBtn" onclick="clearFinderSelection()">선택 해제</button>
+  </div>
+  <div class="finder-chip-list" id="finderChipList"></div>
+  <div class="rec-controls-top">
+    <div class="rec-controls" style="flex:1;margin-bottom:0">
+      <input type="text" class="rec-search" id="finderSearch" placeholder="🔍 게임명 검색..." oninput="debouncedRenderFinderResults()">
+      <select class="rec-select" id="finderSort" onchange="renderFinderResults()">
+        <option value="game-asc">이름 오름순</option>
+        <option value="game-desc">이름 내림순</option>
+        <option value="players-asc">인원 적은 순</option>
+        <option value="players-desc">인원 많은 순</option>
+      </select>
+    </div>
+  </div>
+  <div id="finderList"></div>
+  <div class="finder-unknown-section" id="finderUnknownSection" hidden>
+    <button class="finder-unknown-header" id="finderUnknownHeader" onclick="toggleFinderUnknown()">
+      <span id="finderUnknownLabel">⚠ 인원 표기 불명 (0)</span>
+      <span class="finder-unknown-chev">▸</span>
+    </button>
+    <div class="finder-unknown-body" id="finderUnknownBody" hidden></div>
+  </div>
 </div></div>
 
 <div class="toast" id="toast2" style="display:none"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </body>
 </html>
