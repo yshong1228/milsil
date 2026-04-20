@@ -1,0 +1,27 @@
+{
+  "name": "milsil",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "lint": "eslint app.js data/*.js",
+    "lint:fix": "eslint app.js data/*.js --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yshong1228/milsil.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yshong1228/milsil/issues"
+  },
+  "homepage": "https://github.com/yshong1228/milsil#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0"
+  }
+}
