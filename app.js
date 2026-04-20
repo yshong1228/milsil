@@ -1947,7 +1947,9 @@ function renderMemberDetail(){
           +'<div class="mg-score" style="color:'+scColor+'">'+(sc!==null?sc.toFixed(1):'-')+'</div>'
           +'<div class="mg-info"><div class="mg-name">'+escR(rv.gameName)+'</div>'
           +(rv.diff?'<div class="mg-diff">난이도 '+escR(rv.diff)+'</div>':'')
-          +(rv.review?'<div class="mg-review">'+escR(rv.review)+'</div>':'')
+          +(rv.review?(rv.isSpoiler
+              ?'<div class="rv-spoiler-wrap spoiler-unread"><div class="rv-spoiler-overlay">&#9888; 스포일러 — 클릭하여 보기</div><div class="mg-review">'+escR(rv.review)+'</div></div>'
+              :'<div class="mg-review">'+escR(rv.review)+'</div>'):'')
           +'</div>'
           +(rv.createdAt?'<div class="mg-date">'+stampToLabel(rv.createdAt)+'</div>':'')
           +'</div>';
