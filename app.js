@@ -542,7 +542,7 @@ function cardHTML(ev){
   var mPct=ev.male>0?Math.min(100,Math.round(mP.length/ev.male*100)):0;
   var fPct=ev.female>0?Math.min(100,Math.round(fP.length/ev.female*100)):0;
   var totalNeed=(ev.male+ev.female)-(mP.length+fP.length);
-  var badge='';
+  var badge;
   if(past) badge='<span class="q-badge badge-ended">\u263d \uc784\ubb34 \uc885\ub8cc</span>';
   else if(allFull) badge='<span class="q-badge badge-full">\u2726 \ud30c\ud2f0 \uc644\uc131</span>';
   else badge='<span class="q-badge badge-active">\u2694 '+(totalNeed>0?totalNeed+'\uba85 \ubaa8\uc9d1':'\ubaa8\uc9d1\uc911')+'</span>';
@@ -603,7 +603,6 @@ bindQuery('events',col,function(snap){
 
 
 // ══════ 모험 기록부 + 회원 명부 JS ══════
-var GAMES = typeof _GAMES_DATA !== 'undefined' ? _GAMES_DATA : [];
 var LEGACY_MEMBER_STATS = typeof _MEMBER_STATS_DATA !== 'undefined' ? _MEMBER_STATS_DATA : {};
 var LEGACY_MEMBER_GAMES = {};
 var STATIC_MEMBER_NAMES = typeof _MEMBERS_LIST_DATA !== 'undefined' ? _MEMBERS_LIST_DATA : [];
@@ -613,7 +612,6 @@ var memberRoles = {};
 var addedMembers = [];
 var activeMemName = '';
 var _rc=null,_ac={},_dc={};
-var openRecs = new Set();
 var firebaseGames = [];
 var firebaseReviews = [];
 var gamesCol = db.collection('games');
@@ -638,7 +636,7 @@ function normalizeMemberName(name){
   return String(name||'').trim().replace(/\s+/g,' ');
 }
 function stripMemberAlias(name){
-  return normalizeMemberName(name).replace(/\s*[\(（][^\)）]*[\)）]\s*$/,'').trim();
+  return normalizeMemberName(name).replace(/\s*[(（][^)）]*[)）]\s*$/,'').trim();
 }
 var _allMemberNamesCache=null;
 var _allMemberNamesSet=null;
@@ -1014,6 +1012,31 @@ async function migrateLegacyMemberRoles(){
     console.error('legacy member role migration failed',e);
   }
 }
+
+var _pendingRender={};
+var _rafToken=0;
+function _flushRenders(){
+  _rafToken=0;
+  var p=_pendingRender;_pendingRender={};
+  if(p.stats)renderStats();
+  if(p.games)filterGames();
+  if(p.members)renderMemberGrid();
+  if(p.memberDetail)renderMemberDetail();
+  if(p.finderChips)renderFinderChips();
+  if(p.finderDropdown&&_finderDropdownOpen)renderFinderDropdown();
+  if(p.finderResults)debouncedRenderFinderResults();
+}
+function queueRender(key){
+  _pendingRender[key]=true;
+  if(_rafToken)return;
+  var raf=window.requestAnimationFrame||function(cb){return setTimeout(cb,16);};
+  _rafToken=raf(_flushRenders);
+}
+function _isTabActive(id){
+  var el=document.getElementById(id);
+  return !!(el&&el.classList.contains('active'));
+}
+
 function _bindMembersQuery(){
   bindQuery('members',membersCol,function(snap){
     addedMembers=snap.docs.map(function(doc){
@@ -1023,14 +1046,14 @@ function _bindMembersQuery(){
     invalidateMemberNameCache();
     invalidateReviewCache();
     invalidatePlayedByMember();
-    if((function(){var _el=document.getElementById('members-page');return _el&&_el.classList.contains('active');})() ){
-      renderMemberGrid();
-      renderMemberDetail();
+    if(_isTabActive('members-page')){
+      queueRender('members');
+      queueRender('memberDetail');
     }
-    if((function(){var _el=document.getElementById('findgame-page');return _el&&_el.classList.contains('active');})() ){
-      renderFinderChips();
-      if(_finderDropdownOpen)renderFinderDropdown();
-      debouncedRenderFinderResults();
+    if(_isTabActive('findgame-page')){
+      queueRender('finderChips');
+      queueRender('finderDropdown');
+      queueRender('finderResults');
     }
   },function(err){
     console.error('members sync failed',err);
@@ -1044,21 +1067,21 @@ function _bindGamesQuery(){
     });
     invalidateMergedGames();
     invalidatePlayedByMember();
-    if((function(){var _el=document.getElementById('records-page');return _el&&_el.classList.contains('active');})() ){
-      renderStats();
+    if(_isTabActive('records-page')){
+      queueRender('stats');
       // 열린 리뷰 폼에 입력 중이면 재렌더 스킵
       var _gl=document.getElementById('gameList');
       var _hasInput=_gl&&Array.prototype.some.call(_gl.querySelectorAll('input[type="text"],input[type="number"]'),function(el){return el.value.trim();});
-      if(!_hasInput)filterGames();
+      if(!_hasInput)queueRender('games');
     }
-    if((function(){var _el=document.getElementById('members-page');return _el&&_el.classList.contains('active');})() ){
-      renderMemberGrid();
-      renderMemberDetail();
+    if(_isTabActive('members-page')){
+      queueRender('members');
+      queueRender('memberDetail');
     }
-    if((function(){var _el=document.getElementById('findgame-page');return _el&&_el.classList.contains('active');})() ){
-      renderFinderChips();
-      if(_finderDropdownOpen)renderFinderDropdown();
-      debouncedRenderFinderResults();
+    if(_isTabActive('findgame-page')){
+      queueRender('finderChips');
+      queueRender('finderDropdown');
+      queueRender('finderResults');
     }
   },function(err){
     console.error('games sync failed',err);
@@ -1071,13 +1094,13 @@ function _bindReviewsQuery(){
       return Object.assign({id:d.id,fromFirebase:true},d.data());
     });
     invalidateReviewCache();
-    if((function(){var _el=document.getElementById('records-page');return _el&&_el.classList.contains('active');})() ){
-      renderStats();
-      filterGames();
+    if(_isTabActive('records-page')){
+      queueRender('stats');
+      queueRender('games');
     }
-    if((function(){var _el=document.getElementById('members-page');return _el&&_el.classList.contains('active');})() ){
-      renderMemberGrid();
-      renderMemberDetail();
+    if(_isTabActive('members-page')){
+      queueRender('members');
+      queueRender('memberDetail');
     }
   },function(err){
     console.error('reviews sync failed',err);
@@ -1994,7 +2017,7 @@ function parsePlayersField(text){
   m=t.match(/^(\d+)(?:인|명)이하$/);
   if(m)return {min:1,max:parseInt(m[1],10)};
   // "6~7명", "4-6명", "4~6인"
-  m=t.match(/^(\d+)[~\-](\d+)(?:인|명)?$/);
+  m=t.match(/^(\d+)[~-](\d+)(?:인|명)?$/);
   if(m){
     var lo=parseInt(m[1],10),hi=parseInt(m[2],10);
     if(lo>hi){var tmp=lo;lo=hi;hi=tmp;}

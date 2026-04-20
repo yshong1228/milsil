@@ -905,9 +905,7 @@ body::before{
 .rv-spoiler-wrap.spoiler-unread{cursor:pointer}
 .rv-spoiler-overlay{
   position:absolute;inset:0;
-  background:#120e04cc;
-  backdrop-filter:blur(4px);
-  -webkit-backdrop-filter:blur(4px);
+  background:#120e04;
   display:flex;align-items:center;justify-content:center;
   border-radius:3px;
   font-family:'Cinzel',serif;font-size:11px;color:#8a7050;
