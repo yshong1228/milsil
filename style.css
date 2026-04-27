@@ -218,9 +218,8 @@ body::before{
 .quest-card.past-card{
   background:linear-gradient(160deg,#1e1608,#18120604);
   border-color:#1e1a10;
-  opacity:.6;
 }
-.quest-card.past-card:hover{opacity:.75;border-color:#2a2416}
+.quest-card.past-card:hover{border-color:#2a2416}
 .quest-card.full-card:not(.past-card){border-color:#5a3800}
 
 /* 핀 장식 */

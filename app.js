@@ -513,7 +513,10 @@ function render(){
     return sortOrder==='asc'?da.localeCompare(db):db.localeCompare(da);
   });
   var upcoming=sorted.filter(function(e){return !isPast(e.date);});
-  var past=sorted.filter(function(e){return isPast(e.date);});
+  var past=filtered.filter(function(e){return isPast(e.date);}).sort(function(a,b){
+    var da=(a.date||'')+(a.time||''),db=(b.date||'')+(b.time||'');
+    return db.localeCompare(da);
+  });
   var html='';
   if(upcoming.length){
     html+='<div class="section-head"><div class="section-head-line"></div><div class="section-head-label">\u2694 \ubaa8\uc9d1 \uacf5\uace0 \u2694</div><div class="section-head-line rev"></div></div>';
