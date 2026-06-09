@@ -186,6 +186,182 @@
     });
   };
 
+  // ── 유틸 ──
+  function esc(str){
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function scoreClass(s){
+    return s>=8?'s-great':s>=6.5?'s-good':s>=5?'s-mid':s>=3?'s-low':'s-bad';
+  }
+
+  // ── switchTab 오버라이드 — 마이페이지 숨김 보장 ──
+  var _origSwitchTab=null;
+  function patchSwitchTab(){
+    if(typeof window.switchTab!=='function') return false;
+    _origSwitchTab=window.switchTab;
+    window.switchTab=function(tab){
+      var mp=document.getElementById('mypage-page');
+      if(mp) mp.style.display='none';
+      var btn=document.getElementById('tab-mypage');
+      if(btn) btn.classList.remove('active');
+      _origSwitchTab(tab);
+    };
+    return true;
+  }
+  // app.js가 로드된 직후 auth.js가 실행되므로 즉시 패치 가능
+  if(!patchSwitchTab()){
+    // 혹시 늦게 정의되는 경우 대비
+    setTimeout(patchSwitchTab, 500);
+  }
+
+  // ── 마이페이지 전환 ──
+  window.switchToMyPage=function(){
+    // 다른 탭 비활성화
+    ['board','records','members','findgame'].forEach(function(t){
+      var btn=document.getElementById('tab-'+t);
+      if(btn) btn.className='tab-btn';
+    });
+    var bp=document.getElementById('board-page'); if(bp) bp.classList.add('hidden');
+    ['records-page','members-page','findgame-page'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.classList.remove('active');
+    });
+    var btn=document.getElementById('tab-mypage');
+    if(btn) btn.className='tab-btn active';
+    var mp=document.getElementById('mypage-page');
+    if(mp) mp.style.display='block';
+    renderMyPage();
+  };
+
+  // ── 마이페이지 렌더링 ──
+  function renderMyPage(){
+    var me=window.currentLinkedMember;
+    var user=window.currentUser;
+    if(!me||!user) return;
+    renderMypageProfile(me, user);
+    renderMypageEvents(me);
+    renderMypageGames(me);
+    renderMypageReviews(me);
+  }
+
+  function renderMypageProfile(me, user){
+    var avatarEl=document.getElementById('mypageAvatar');
+    var nameEl=document.getElementById('mypageName');
+    var levelEl=document.getElementById('mypageLevel');
+    var statsEl=document.getElementById('mypageStatsRow');
+
+    if(avatarEl && user.photoURL){ avatarEl.src=user.photoURL; avatarEl.style.display='block'; }
+    if(nameEl) nameEl.textContent=me;
+
+    // app.js getMemberStats 활용 (전역 함수)
+    var stats={exp:0,avg:0,played:0,reviewCount:0};
+    if(typeof getMemberStats==='function') stats=getMemberStats(me)||stats;
+
+    // 레벨 계산 (app.js getLevel 활용)
+    var lv=typeof getLevel==='function'?getLevel(stats.exp):Math.floor(stats.exp/5)||1;
+    if(levelEl) levelEl.textContent='Lv.'+lv+' 탐정 · EXP '+stats.exp;
+    if(statsEl) statsEl.innerHTML=
+      '<div class="mypg-stat"><div class="mypg-stat-val">'+stats.played+'</div><div class="mypg-stat-label">총 플레이</div></div>'+
+      '<div class="mypg-stat"><div class="mypg-stat-val">'+(stats.avg?stats.avg.toFixed(1):'-')+'</div><div class="mypg-stat-label">평균 점수</div></div>'+
+      '<div class="mypg-stat"><div class="mypg-stat-val">'+stats.reviewCount+'</div><div class="mypg-stat-label">작성 리뷰</div></div>'+
+      '<div class="mypg-stat"><div class="mypg-stat-val">'+stats.exp+'</div><div class="mypg-stat-label">경험치</div></div>';
+  }
+
+  function renderMypageEvents(me){
+    var el=document.getElementById('mypageEvents');
+    if(!el) return;
+    var allEvents=window.events||[];
+    var mine=allEvents.filter(function(ev){
+      return (ev.participants||[]).some(function(p){ return p.name===me; });
+    }).sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+
+    if(!mine.length){ el.innerHTML='<div class="mypage-empty">참가한 파티 기록이 없습니다</div>'; return; }
+
+    el.innerHTML=mine.map(function(ev){
+      var dateStr=(ev.date||'').replace(/-/g,'.');
+      var dow='';
+      if(ev.date){ try{ dow=['일','월','화','수','목','금','토'][new Date(ev.date).getDay()]; }catch(e){} }
+      var others=(ev.participants||[]).filter(function(p){ return p.name!==me; }).map(function(p){ return esc(p.name); });
+      return '<div class="mypg-event-card">'+
+        '<div class="mypg-ev-date">'+dateStr+(dow?' ('+dow+')':'')+' '+(ev.time||'')+'</div>'+
+        '<div class="mypg-ev-title">'+esc(ev.title||'')+'</div>'+
+        (others.length?'<div class="mypg-ev-members">함께한 회원: '+others.join(', ')+'</div>':'')+
+        (ev.note?'<div class="mypg-ev-note">'+esc(ev.note)+'</div>':'')+
+        '</div>';
+    }).join('');
+  }
+
+  function renderMypageGames(me){
+    var el=document.getElementById('mypageGames');
+    if(!el) return;
+    var allGames=typeof getMergedGames==='function'?getMergedGames():(window.GAMES||[]);
+    var mine=allGames.filter(function(g){ return g.scores&&g.scores[me]!==undefined; })
+      .sort(function(a,b){ return (b.scores[me]||0)-(a.scores[me]||0); });
+
+    if(!mine.length){ el.innerHTML='<div class="mypage-empty">게임 점수 기록이 없습니다</div>'; return; }
+
+    el.innerHTML=mine.map(function(g){
+      var sc=g.scores[me];
+      var others=Object.keys(g.scores||{}).filter(function(n){ return n!==me; });
+      return '<div class="mypg-game-row">'+
+        '<div class="score-ring '+scoreClass(sc)+'" style="width:36px;height:36px;font-size:12px">'+sc+'</div>'+
+        '<div class="mypg-game-info">'+
+          '<div class="mypg-game-name">'+esc(g.name)+'</div>'+
+          '<div class="mypg-game-meta">'+
+            (g.diff?'<span>'+esc(g.diff)+'</span>':'')+
+            (g.players?'<span>'+esc(g.players)+'</span>':'')+
+            (others.length?'<span>'+others.map(esc).join(', ')+'</span>':'')+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  function renderMypageReviews(me){
+    var el=document.getElementById('mypageReviews');
+    if(!el) return;
+    el.innerHTML='<div class="mypg-loading">☽ 리뷰 불러오는 중... ☾</div>';
+
+    db.collection('reviews').where('memberName','==',me).get().then(function(snap){
+      var rvs=[];
+      snap.forEach(function(doc){ rvs.push(doc.data()); });
+      // 정적 LEGACY_REVIEWS 병합 (Firestore에 없는 것만)
+      var seen={};
+      rvs.forEach(function(r){ seen[(r.gameName||'')+'||'+(r.review||'')]=true; });
+      (window.LEGACY_REVIEWS||[]).forEach(function(r){
+        if(r.memberName!==me) return;
+        var k=(r.gameName||'')+'||'+(r.review||'');
+        if(!seen[k]){ seen[k]=true; rvs.push(r); }
+      });
+      rvs.sort(function(a,b){ return (b.gameName||'').localeCompare(a.gameName||'','ko'); });
+      if(!rvs.length){ el.innerHTML='<div class="mypage-empty">작성한 리뷰가 없습니다</div>'; return; }
+      el.innerHTML=rvs.map(function(rv){
+        var sc=rv.score||0;
+        return '<div class="mypg-review-card">'+
+          '<div class="mypg-rv-header">'+
+            '<div class="score-ring '+scoreClass(sc)+'" style="width:34px;height:34px;font-size:11px">'+sc+'</div>'+
+            '<div class="mypg-rv-game">'+esc(rv.gameName||'')+'</div>'+
+            (rv.isSpoiler?'<span class="mypg-rv-spoiler">스포일러</span>':'')+
+          '</div>'+
+          (rv.review?'<div class="mypg-rv-text">'+esc(rv.review)+'</div>':'')+
+          '</div>';
+      }).join('');
+    }).catch(function(){
+      // Firestore 실패 시 정적 데이터만
+      var rvs=(window.LEGACY_REVIEWS||[]).filter(function(r){ return r.memberName===me; });
+      if(!rvs.length){ el.innerHTML='<div class="mypage-empty">작성한 리뷰가 없습니다</div>'; return; }
+      el.innerHTML=rvs.map(function(rv){
+        var sc=rv.score||0;
+        return '<div class="mypg-review-card">'+
+          '<div class="mypg-rv-header">'+
+            '<div class="score-ring '+scoreClass(sc)+'" style="width:34px;height:34px;font-size:11px">'+sc+'</div>'+
+            '<div class="mypg-rv-game">'+esc(rv.gameName||'')+'</div>'+
+          '</div>'+
+          (rv.review?'<div class="mypg-rv-text">'+esc(rv.review)+'</div>':'')+
+          '</div>';
+      }).join('');
+    });
+  }
+
   // ── Auth 상태 변경 감지 ──
   auth.onAuthStateChanged(function(user){
     window.currentUser=user;
@@ -203,6 +379,9 @@
           updateHeaderProfile(user,data.memberName||null);
           if(linkModal) linkModal.style.display='none';
           checkUnlinkedMembers();
+          // 마이페이지 탭 표시
+          var mpBtn=document.getElementById('tab-mypage');
+          if(mpBtn) mpBtn.style.display='flex';
         }else{
           if(profile) profile.style.display='none';
           showLinkModal(user);
