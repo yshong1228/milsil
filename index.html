@@ -344,41 +344,57 @@
 
 <!-- ── 마이페이지 ── -->
 <div id="mypage-page" style="display:none">
-  <div class="page-deco" style="margin-bottom:1rem">✦ ── 나의 탐정 수첩 ── ✦</div>
 
-  <!-- 프로필 카드 -->
-  <div class="mypg-profile-card">
-    <img id="mypageAvatar" class="mypg-avatar" src="" alt="" style="display:none">
-    <div class="mypg-profile-body">
-      <div class="mypg-name" id="mypageName"></div>
-      <div class="mypg-level" id="mypageLevel"></div>
-      <div class="mypg-stats-row" id="mypageStatsRow"></div>
+  <!-- 케이스파일 헤더 -->
+  <div class="cfile-wrap">
+    <div class="cfile-header">
+      <div class="cfile-top-bar">
+        <span class="cfile-label-stamp">DETECTIVE FILE</span>
+        <span class="cfile-number" id="cfileNumber">#0000</span>
+      </div>
+      <div class="cfile-identity">
+        <img id="mypageAvatar" class="cfile-avatar" src="" alt="" style="display:none">
+        <div class="cfile-identity-body">
+          <div class="cfile-name" id="mypageName"></div>
+          <div class="cfile-rank" id="mypageLevel"></div>
+        </div>
+      </div>
+      <div class="cfile-divider"></div>
+      <div class="cfile-stats-strip" id="mypageStatsRow"></div>
+    </div>
+
+    <!-- 아코디언 섹션 -->
+    <div class="cfile-sections">
+
+      <div class="cfile-section" id="csec-events">
+        <button class="cfile-sec-hd" onclick="toggleCSection('events')">
+          <span class="cfile-arrow" id="carrow-events">▸</span>
+          <span class="cfile-sec-title">파티 참가 기록</span>
+          <span class="cfile-sec-cnt" id="csec-events-cnt"></span>
+        </button>
+        <div class="cfile-sec-body" id="mypageEvents"></div>
+      </div>
+
+      <div class="cfile-section" id="csec-games">
+        <button class="cfile-sec-hd" onclick="toggleCSection('games')">
+          <span class="cfile-arrow" id="carrow-games">▸</span>
+          <span class="cfile-sec-title">게임 기록</span>
+          <span class="cfile-sec-cnt" id="csec-games-cnt"></span>
+        </button>
+        <div class="cfile-sec-body" id="mypageGames"></div>
+      </div>
+
+      <div class="cfile-section" id="csec-reviews">
+        <button class="cfile-sec-hd" onclick="toggleCSection('reviews')">
+          <span class="cfile-arrow" id="carrow-reviews">▸</span>
+          <span class="cfile-sec-title">작성한 리뷰</span>
+          <span class="cfile-sec-cnt" id="csec-reviews-cnt"></span>
+        </button>
+        <div class="cfile-sec-body" id="mypageReviews"></div>
+      </div>
+
     </div>
   </div>
-
-  <!-- 참가 이벤트 -->
-  <div class="section-head" style="margin-top:1.75rem">
-    <div class="section-head-line"></div>
-    <div class="section-head-label">파티 참가 기록</div>
-    <div class="section-head-line rev"></div>
-  </div>
-  <div id="mypageEvents"></div>
-
-  <!-- 게임 점수 기록 -->
-  <div class="section-head" style="margin-top:1.5rem">
-    <div class="section-head-line"></div>
-    <div class="section-head-label">게임 기록</div>
-    <div class="section-head-line rev"></div>
-  </div>
-  <div id="mypageGames"></div>
-
-  <!-- 내 리뷰 -->
-  <div class="section-head" style="margin-top:1.5rem">
-    <div class="section-head-line"></div>
-    <div class="section-head-label">작성한 리뷰</div>
-    <div class="section-head-line rev"></div>
-  </div>
-  <div id="mypageReviews"></div>
 </div>
 
 </body>
