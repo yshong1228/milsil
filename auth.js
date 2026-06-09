@@ -249,13 +249,26 @@
 
   function renderMypageProfile(me, user){
     var avatarEl=document.getElementById('mypageAvatar');
+    var emojiEl=document.getElementById('mypageAvatarEmoji');
     var nameEl=document.getElementById('mypageName');
     var levelEl=document.getElementById('mypageLevel');
     var statsEl=document.getElementById('mypageStatsRow');
     var numEl=document.getElementById('cfileNumber');
 
-    if(avatarEl && user.photoURL){ avatarEl.src=user.photoURL; avatarEl.style.display='block'; }
-    if(nameEl) nameEl.textContent=me;
+    var profile=window.currentUserProfile||{};
+    var avatarType=profile.avatarType||'google';
+    var avatarEmoji=profile.avatarEmoji||'🔍';
+    var displayName=profile.nickname||me;
+
+    // 아바타 표시
+    if(avatarType==='emoji'){
+      if(avatarEl) avatarEl.style.display='none';
+      if(emojiEl){ emojiEl.textContent=avatarEmoji; emojiEl.style.display='flex'; }
+    }else{
+      if(emojiEl) emojiEl.style.display='none';
+      if(avatarEl && user.photoURL){ avatarEl.src=user.photoURL; avatarEl.style.display='block'; }
+    }
+    if(nameEl) nameEl.textContent=displayName;
 
     // 케이스파일 번호 — 이름 문자 코드 기반 4자리
     if(numEl){
@@ -404,10 +417,15 @@
         if(doc.exists){
           var data=doc.data();
           window.currentLinkedMember=data.memberName||null;
+          window.currentUserProfile={
+            nickname: data.nickname||'',
+            realName: data.realName||'',
+            avatarType: data.avatarType||'google',
+            avatarEmoji: data.avatarEmoji||'🔍'
+          };
           updateHeaderProfile(user,data.memberName||null);
           if(linkModal) linkModal.style.display='none';
           checkUnlinkedMembers();
-          // 마이페이지 탭 표시
           var mpBtn=document.getElementById('tab-mypage');
           if(mpBtn) mpBtn.style.display='flex';
         }else{
@@ -451,6 +469,105 @@
     if(!sec) return;
     var isOpen=sec.classList.contains('open');
     sec.classList.toggle('open',!isOpen);
+  };
+
+  // ── 프로필 수정 모달 ──
+  var _peditAvatarType='google';
+  var _peditSelectedEmoji='🔍';
+
+  window.openProfileEdit=function(){
+    var modal=document.getElementById('profileEditModal');
+    if(!modal) return;
+    var profile=window.currentUserProfile||{};
+    var user=window.currentUser;
+
+    // 현재 값으로 초기화
+    _peditAvatarType=profile.avatarType||'google';
+    _peditSelectedEmoji=profile.avatarEmoji||'🔍';
+    document.getElementById('peditNickname').value=profile.nickname||'';
+    document.getElementById('peditRealName').value=profile.realName||'';
+
+    // 탭 상태 반영
+    _updatePeditAvatarTab(_peditAvatarType, user);
+
+    // 이모지 선택 상태 표시
+    document.querySelectorAll('.pedit-emoji-btn').forEach(function(btn){
+      btn.classList.toggle('selected', btn.getAttribute('data-emoji')===_peditSelectedEmoji);
+    });
+
+    modal.style.display='flex';
+  };
+
+  window.closeProfileEdit=function(){
+    var modal=document.getElementById('profileEditModal');
+    if(modal) modal.style.display='none';
+  };
+
+  window.switchAvatarTab=function(type){
+    _peditAvatarType=type;
+    var user=window.currentUser;
+    _updatePeditAvatarTab(type, user);
+  };
+
+  window.selectEmoji=function(btn){
+    _peditSelectedEmoji=btn.getAttribute('data-emoji');
+    document.querySelectorAll('.pedit-emoji-btn').forEach(function(b){ b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    // 미리보기 업데이트
+    var preview=document.getElementById('peditAvatarPreview');
+    if(preview) preview.textContent=_peditSelectedEmoji;
+  };
+
+  function _updatePeditAvatarTab(type, user){
+    var tabG=document.getElementById('peditTabGoogle');
+    var tabE=document.getElementById('peditTabEmoji');
+    var grid=document.getElementById('peditEmojiGrid');
+    var preview=document.getElementById('peditAvatarPreview');
+    if(tabG) tabG.classList.toggle('active', type==='google');
+    if(tabE) tabE.classList.toggle('active', type==='emoji');
+    if(grid) grid.style.display=type==='emoji'?'grid':'none';
+    if(preview){
+      preview.innerHTML='';
+      if(type==='google' && user && user.photoURL){
+        var img=document.createElement('img');
+        img.src=user.photoURL;
+        preview.appendChild(img);
+      }else if(type==='emoji'){
+        preview.textContent=_peditSelectedEmoji;
+      }else{
+        preview.textContent='👤';
+      }
+    }
+  }
+
+  window.saveProfileEdit=function(){
+    var user=window.currentUser;
+    if(!user) return;
+    var btn=document.querySelector('.pedit-save');
+    if(btn) btn.disabled=true;
+
+    var nickname=document.getElementById('peditNickname').value.trim();
+    var realName=document.getElementById('peditRealName').value.trim();
+
+    var updateData={
+      avatarType: _peditAvatarType,
+      avatarEmoji: _peditSelectedEmoji,
+      nickname: nickname,
+      realName: realName
+    };
+
+    db.collection('users').doc(user.uid).update(updateData).then(function(){
+      window.currentUserProfile=Object.assign(window.currentUserProfile||{}, updateData);
+      if(typeof showToast==='function') showToast('프로필이 저장되었습니다');
+      if(btn) btn.disabled=false;
+      window.closeProfileEdit();
+      var me=window.currentLinkedMember;
+      if(me) renderMypageProfile(me, user);
+    },function(e){
+      console.error('[Auth] 프로필 저장 실패:',e);
+      if(typeof showToast==='function') showToast('저장에 실패했습니다');
+      if(btn) btn.disabled=false;
+    });
   };
 
   // ── 로그아웃 ──
