@@ -429,6 +429,7 @@
           if(linkModal) linkModal.style.display='none';
           checkUnlinkedMembers();
           loadNicknameMap();
+          applyAutoFill();
           var mpBtn=document.getElementById('tab-mypage');
           if(mpBtn) mpBtn.style.display='flex';
         }else{
@@ -508,12 +509,12 @@
   }
 
   function setupNicknamePatcher(){
+    // 닉네임 교체 옵저버 (records-page, members-page)
     ['records-page','members-page'].forEach(function(id){
       var el=document.getElementById(id);
       if(!el) return;
       var timer=null;
       var obs=new MutationObserver(function(mutations){
-        // 새 엘리먼트 노드가 추가된 경우에만 반응 (텍스트 변경 루프 방지)
         var hasNewEl=mutations.some(function(m){
           return m.addedNodes&&Array.prototype.some.call(m.addedNodes,function(n){ return n.nodeType===1; });
         });
@@ -523,13 +524,97 @@
       });
       obs.observe(el,{childList:true,subtree:true});
     });
+
+    // 이름 자동완성 옵저버 (board-page, records-page)
+    // records-page에서 리뷰 폼 open 클래스 변경도 감지
+    ['board-page','records-page'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      var timer=null;
+      function scheduleAutoFill(){
+        clearTimeout(timer);
+        timer=setTimeout(applyAutoFill, 30);
+      }
+      var obs=new MutationObserver(function(mutations){
+        var relevant=mutations.some(function(m){
+          if(m.type==='childList'){
+            return Array.prototype.some.call(m.addedNodes||[],function(n){ return n.nodeType===1; });
+          }
+          if(m.type==='attributes' && m.attributeName==='class'){
+            return m.target.classList.contains('open');
+          }
+          return false;
+        });
+        if(relevant) scheduleAutoFill();
+      });
+      obs.observe(el,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+    });
   }
 
-  // DOM 준비 후 패처 설치
+  // ── 이름 자동완성 ──
+  function applyAutoFill(){
+    var me=window.currentLinkedMember;
+    if(!me) return;
+
+    // 리뷰 폼 이름 필드 (.rf-name)
+    document.querySelectorAll('.rf-name').forEach(function(inp){
+      if(!inp.value.trim()){
+        inp.value=me;
+        inp.classList.add('autofilled-name');
+        inp.title='로그인된 회원으로 자동 입력됩니다';
+      }
+    });
+
+    // 파티 참가 이름 필드 (.join-input)
+    document.querySelectorAll('.join-input').forEach(function(inp){
+      if(!inp.value.trim()){
+        inp.value=me;
+        inp.classList.add('autofilled-name');
+        inp.title='로그인된 회원으로 자동 입력됩니다';
+      }
+    });
+  }
+
+  // ── joinEvent 패치 — 빈 이름 필드 자동 주입 ──
+  function patchJoinEvent(){
+    if(typeof window.joinEvent!=='function') return;
+    var _orig=window.joinEvent;
+    window.joinEvent=function(id,gender,e){
+      var me=window.currentLinkedMember;
+      if(me){
+        var inputId=(gender==='male'?'jnm_':'jnf_')+id;
+        var nameEl=document.getElementById(inputId);
+        if(nameEl && !nameEl.value.trim()) nameEl.value=me;
+      }
+      return _orig.apply(this,arguments);
+    };
+  }
+
+  // ── submitReview 패치 — 빈 이름 필드 자동 주입 ──
+  function patchSubmitReview(){
+    if(typeof window.submitReview!=='function') return;
+    var _orig=window.submitReview;
+    window.submitReview=function(gameName,rank,e){
+      var me=window.currentLinkedMember;
+      if(me){
+        var nameEl=document.getElementById('rvn_'+rank);
+        if(nameEl && !nameEl.value.trim()) nameEl.value=me;
+      }
+      return _orig.apply(this,arguments);
+    };
+  }
+
+  // DOM 준비 후 패처·패치 설치
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', setupNicknamePatcher);
+    document.addEventListener('DOMContentLoaded', function(){
+      setupNicknamePatcher();
+      patchJoinEvent();
+      patchSubmitReview();
+    });
   }else{
     setupNicknamePatcher();
+    patchJoinEvent();
+    patchSubmitReview();
   }
 
   // ── 케이스파일 아코디언 토글 ──
