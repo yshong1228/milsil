@@ -796,3 +796,80 @@ body::after{display:none}
   transition:all .2s;padding:0;line-height:1;
 }
 .unlinked-banner-close:hover{background:#fef3c7;border-color:#92400e;color:#92400e}
+
+/* ── 마이페이지 ── */
+#mypage-page{max-width:800px;margin:0 auto;padding:1.5rem 1rem 5rem;position:relative;z-index:1}
+.tab-mypage-btn{margin-left:auto}
+
+.mypg-profile-card{
+  background:#faf7f0;border:1px solid var(--border);border-top:3px solid var(--gold);
+  border-radius:2px;padding:1.25rem 1.5rem;
+  box-shadow:2px 2px 0 rgba(160,144,112,0.2),0 4px 16px rgba(0,0,0,0.06);
+  display:flex;align-items:center;gap:1.25rem;
+  position:relative;
+}
+.mypg-profile-card::before{
+  content:'DETECTIVE FILE';
+  position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+  font-family:'Cinzel',serif;font-size:8px;font-weight:700;
+  color:#fff;background:var(--gold);padding:2px 12px;letter-spacing:3px;white-space:nowrap;
+}
+.mypg-avatar{
+  width:72px;height:72px;border-radius:50%;
+  border:2px solid var(--gold);object-fit:cover;flex-shrink:0;
+  box-shadow:2px 2px 0 rgba(139,105,20,0.2);
+}
+.mypg-profile-body{flex:1;min-width:0}
+.mypg-name{
+  font-family:'Cinzel',serif;font-size:20px;font-weight:700;
+  color:var(--ink);letter-spacing:1px;margin-bottom:3px;
+}
+.mypg-level{font-size:11px;color:var(--gold-dark);font-family:'Cinzel',serif;letter-spacing:.5px;margin-bottom:10px}
+.mypg-stats-row{display:flex;gap:1.25rem;flex-wrap:wrap}
+.mypg-stat{text-align:center}
+.mypg-stat-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold-dark)}
+.mypg-stat-label{font-size:10px;color:var(--ink-faint);letter-spacing:.3px;margin-top:1px}
+
+/* 이벤트 카드 */
+.mypg-event-card{
+  background:#faf7f0;border:1px solid var(--border);border-left:3px solid var(--gold);
+  border-radius:0 2px 2px 0;padding:12px 14px;margin-bottom:8px;
+  box-shadow:1px 1px 0 rgba(160,144,112,0.15);
+  position:relative;
+}
+.mypg-event-card::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(160,130,80,0.06) 27px,rgba(160,130,80,0.06) 28px);
+  pointer-events:none;
+}
+.mypg-ev-date{font-family:'Cinzel',serif;font-size:11px;color:var(--gold-dark);letter-spacing:.5px;margin-bottom:4px}
+.mypg-ev-title{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.mypg-ev-members{font-size:12px;color:var(--ink-dim);margin-bottom:3px}
+.mypg-ev-note{font-size:11px;color:var(--ink-faint);font-style:italic;border-top:1px solid #e8dcc8;margin-top:6px;padding-top:6px}
+
+/* 게임 기록 행 */
+.mypg-game-row{
+  display:flex;align-items:center;gap:12px;
+  background:#faf7f0;border:1px solid var(--border);border-radius:2px;
+  padding:10px 14px;margin-bottom:7px;
+  box-shadow:1px 1px 0 rgba(160,144,112,0.12);
+  transition:border-color .2s;
+}
+.mypg-game-row:hover{border-color:var(--gold)}
+.mypg-game-info{flex:1;min-width:0}
+.mypg-game-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mypg-game-meta{display:flex;gap:10px;flex-wrap:wrap}
+.mypg-game-meta span{font-size:11px;color:var(--ink-faint)}
+
+/* 리뷰 카드 */
+.mypg-review-card{
+  background:#fff;border:1px solid var(--border);border-radius:2px;
+  padding:12px 14px;margin-bottom:8px;
+  box-shadow:1px 1px 0 rgba(160,144,112,0.1);
+}
+.mypg-rv-header{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.mypg-rv-game{font-size:14px;font-weight:600;color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mypg-rv-spoiler{font-family:'Cinzel',serif;font-size:9px;color:#8b1a1a;border:1px solid #8b1a1a;border-radius:1px;padding:1px 6px;letter-spacing:.3px;flex-shrink:0}
+.mypg-rv-text{font-size:13px;color:var(--ink-dim);line-height:1.7;word-break:break-all}
+.mypage-empty{text-align:center;padding:1.5rem;color:#c0b090;font-size:12px;font-family:'Cinzel',serif;letter-spacing:.5px;font-style:italic}
+.mypg-loading{text-align:center;padding:1rem;color:#a09070;font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px}
