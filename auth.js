@@ -40,6 +40,36 @@
     }
   }
 
+  // ── 미연결 회원 배너 ──
+  function checkUnlinkedMembers(){
+    db.collection('members').get().then(function(snap){
+      var unlinked=[];
+      snap.forEach(function(doc){
+        var d=doc.data();
+        if(!d.uid) unlinked.push(d.memberName||doc.id);
+      });
+      if(unlinked.length>0){
+        var banner=document.getElementById('unlinkedBanner');
+        var countEl=document.getElementById('unlinkedBannerCount');
+        var namesEl=document.getElementById('unlinkedBannerNames');
+        if(!banner) return;
+        if(countEl) countEl.textContent=unlinked.length;
+        if(namesEl) namesEl.textContent=unlinked.join(', ');
+        banner.style.display='block';
+      } else {
+        var b=document.getElementById('unlinkedBanner');
+        if(b) b.style.display='none';
+      }
+    }).catch(function(e){
+      console.error('[Auth] 미연결 확인 실패:',e);
+    });
+  }
+
+  window.dismissUnlinkedBanner=function(){
+    var banner=document.getElementById('unlinkedBanner');
+    if(banner) banner.style.display='none';
+  };
+
   // ── 본인 확인 모달 표시 ──
   function showLinkModal(user){
     var modal=document.getElementById('linkModal');
@@ -116,18 +146,16 @@
     var confirmBtn=document.getElementById('linkConfirmBtn');
     if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='연결 중...'; }
 
-    // 이미 다른 사람이 선점했는지 재확인
     db.collection('members').doc(memberName).get().then(function(doc){
       if(doc.exists && doc.data().uid){
         if(confirmBtn){ confirmBtn.disabled=false; confirmBtn.textContent='✦  '+memberName+'으로 연결하기'; }
         if(typeof showToast==='function') showToast('이미 다른 계정이 연결된 이름입니다');
-        // 선택 해제 후 taken 표시
         selected.disabled=true;
         selected.classList.remove('selected');
         selected.classList.add('link-member-taken');
         selected.innerHTML='<span class="link-member-name">'+memberName+'</span><span class="link-taken-badge">연결됨</span>';
         confirmBtn.textContent='이름을 선택해주세요';
-        return;
+        return Promise.reject('taken');
       }
 
       var batch=db.batch();
@@ -142,7 +170,6 @@
         uid:user.uid,
         email:user.email||''
       });
-
       return batch.commit();
     }).then(function(){
       var modal=document.getElementById('linkModal');
@@ -150,7 +177,10 @@
       window.currentLinkedMember=memberName;
       updateHeaderProfile(user,memberName);
       if(typeof showToast==='function') showToast('✦  '+memberName+'님 연결 완료');
+      // 연결 완료 후 미연결 배너 갱신
+      checkUnlinkedMembers();
     }).catch(function(e){
+      if(e==='taken') return;
       console.error('[Auth] 연결 실패:',e);
       if(confirmBtn){ confirmBtn.disabled=false; confirmBtn.textContent='✦  '+memberName+'으로 연결하기'; }
       if(typeof showToast==='function') showToast('연결 실패: '+e.message);
@@ -173,8 +203,10 @@
           window.currentLinkedMember=data.memberName||null;
           updateHeaderProfile(user,data.memberName||null);
           if(linkModal) linkModal.style.display='none';
+          // 로그인 완료 후 미연결 회원 확인
+          checkUnlinkedMembers();
         }else{
-          // 최초 로그인 → 본인 확인
+          // 기존 로그인 사용자 포함 — users 문서 없으면 본인 확인 필수
           if(profile) profile.style.display='none';
           showLinkModal(user);
         }
@@ -186,6 +218,8 @@
       if(overlay) overlay.style.display='flex';
       if(profile) profile.style.display='none';
       if(linkModal) linkModal.style.display='none';
+      var banner=document.getElementById('unlinkedBanner');
+      if(banner) banner.style.display='none';
       window.currentLinkedMember=null;
     }
   });
