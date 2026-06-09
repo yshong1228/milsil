@@ -762,3 +762,37 @@ body::after{display:none}
   background:#f0e8d8;color:#c0b090;border-color:#d4c4a0;cursor:not-allowed;box-shadow:none;
 }
 .link-note{font-size:10px;color:#c0b090;margin-top:.75rem;font-family:'Cinzel',serif;letter-spacing:.3px;flex-shrink:0}
+
+/* ── 미연결 회원 알림 배너 ── */
+.unlinked-banner{
+  background:#fffbeb;
+  border-bottom:2px solid #d4a520;
+  border-top:1px solid #f0d060;
+  position:sticky;top:112px;z-index:97;
+  box-shadow:0 2px 8px rgba(180,130,0,0.1);
+}
+.unlinked-banner-inner{
+  max-width:800px;margin:0 auto;
+  display:flex;align-items:center;gap:10px;
+  padding:9px 1.5rem;
+}
+.unlinked-banner-icon{
+  color:#b45309;font-size:14px;flex-shrink:0;
+}
+.unlinked-banner-text{
+  flex:1;font-size:12px;color:#7c4d00;
+  font-family:'Noto Serif KR',serif;line-height:1.5;
+}
+.unlinked-banner-text strong{
+  font-family:'Cinzel',serif;font-size:13px;color:#92400e;
+}
+.unlinked-banner-names{
+  font-family:'Cinzel',serif;font-size:11px;color:#a16207;letter-spacing:.3px;
+}
+.unlinked-banner-close{
+  background:none;border:1px solid #d4a520;border-radius:50%;
+  width:22px;height:22px;font-size:10px;color:#b45309;
+  cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;padding:0;line-height:1;
+}
+.unlinked-banner-close:hover{background:#fef3c7;border-color:#92400e;color:#92400e}
