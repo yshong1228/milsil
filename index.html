@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -33,6 +33,26 @@
       Google로 로그인
     </button>
     <p class="login-note">초대된 회원만 이용 가능합니다</p>
+  </div>
+</div>
+
+<!-- ── 본인 확인 모달 (최초 로그인 시) ── -->
+<div id="linkModal" class="link-modal-wrap" style="display:none">
+  <div class="link-modal">
+    <div class="link-modal-stamp">IDENTITY CHECK</div>
+    <div class="link-modal-logo">✦</div>
+    <h2 class="link-modal-title">본인 확인</h2>
+    <p class="link-modal-desc">명부에서 본인 이름을 선택해주세요</p>
+    <div class="link-google-profile">
+      <img id="linkGoogleAvatar" class="link-google-avatar" src="" alt="" style="display:none">
+      <div class="link-google-info">
+        <div class="link-google-label">연결 계정</div>
+        <div class="link-google-name" id="linkGoogleName"></div>
+      </div>
+    </div>
+    <div class="link-member-grid" id="linkMemberGrid"></div>
+    <button class="link-confirm-btn" id="linkConfirmBtn" onclick="confirmMemberLink()" disabled>이름을 선택해주세요</button>
+    <p class="link-note">선택 후 변경은 관리자에게 문의해주세요</p>
   </div>
 </div>
 
@@ -308,3 +328,4 @@
 
 </body>
 </html>
+
