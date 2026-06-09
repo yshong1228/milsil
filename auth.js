@@ -23,6 +23,13 @@
     return;
   }
 
+  // JSON 정적 목록 (app.js가 미리 로드) + '미참여 인원' 제외
+  function getJsonMemberNames(){
+    return (window._MEMBERS_LIST_DATA||[]).filter(function(n){
+      return n && n!=='미참여 인원';
+    });
+  }
+
   // ── 헤더 프로필 업데이트 ──
   function updateHeaderProfile(user, memberName){
     var profile=document.getElementById('userProfile');
@@ -41,24 +48,31 @@
   }
 
   // ── 미연결 회원 배너 ──
+  // JSON 전체 목록 기준으로, Firestore에 uid가 없는 회원을 표시
   function checkUnlinkedMembers(){
+    var jsonNames=getJsonMemberNames();
+    if(!jsonNames.length) return;
+
     db.collection('members').get().then(function(snap){
-      var unlinked=[];
+      var linkedSet={};
       snap.forEach(function(doc){
         var d=doc.data();
-        if(!d.uid) unlinked.push(d.memberName||doc.id);
+        if(d.uid) linkedSet[d.memberName||doc.id]=true;
       });
+
+      var unlinked=jsonNames.filter(function(n){ return !linkedSet[n]; });
+
+      var banner=document.getElementById('unlinkedBanner');
+      var countEl=document.getElementById('unlinkedBannerCount');
+      var namesEl=document.getElementById('unlinkedBannerNames');
+      if(!banner) return;
+
       if(unlinked.length>0){
-        var banner=document.getElementById('unlinkedBanner');
-        var countEl=document.getElementById('unlinkedBannerCount');
-        var namesEl=document.getElementById('unlinkedBannerNames');
-        if(!banner) return;
         if(countEl) countEl.textContent=unlinked.length;
         if(namesEl) namesEl.textContent=unlinked.join(', ');
         banner.style.display='block';
-      } else {
-        var b=document.getElementById('unlinkedBanner');
-        if(b) b.style.display='none';
+      }else{
+        banner.style.display='none';
       }
     }).catch(function(e){
       console.error('[Auth] 미연결 확인 실패:',e);
@@ -71,6 +85,7 @@
   };
 
   // ── 본인 확인 모달 표시 ──
+  // JSON 목록을 기반으로 회원을 나열하고, Firestore로 UID 연결 여부만 확인
   function showLinkModal(user){
     var modal=document.getElementById('linkModal');
     if(!modal) return;
@@ -91,31 +106,34 @@
 
     modal.style.display='flex';
 
+    var jsonNames=getJsonMemberNames();
+
+    if(!jsonNames.length){
+      if(grid) grid.innerHTML='<div style="text-align:center;padding:1.5rem;color:#a09070;font-size:12px">등록된 회원이 없습니다<br>관리자에게 문의해주세요</div>';
+      return;
+    }
+
+    // Firestore에서 이미 연결된 이름 목록만 가져옴
     db.collection('members').get().then(function(snap){
+      var linkedSet={};
+      snap.forEach(function(doc){
+        var d=doc.data();
+        if(d.uid) linkedSet[d.memberName||doc.id]=true;
+      });
+
       if(!grid) return;
       grid.innerHTML='';
 
-      if(snap.empty){
-        grid.innerHTML='<div style="text-align:center;padding:1.5rem;color:#a09070;font-size:12px">등록된 회원이 없습니다<br>관리자에게 문의해주세요</div>';
-        return;
-      }
-
-      var members=[];
-      snap.forEach(function(doc){ members.push(doc.data()); });
-      members.sort(function(a,b){
-        return (a.memberName||'').localeCompare(b.memberName||'','ko');
-      });
-
-      members.forEach(function(data){
-        var name=data.memberName||'';
-        if(!name) return;
-        var taken=!!(data.uid);
+      // JSON 목록 기준으로 렌더 (가나다 정렬은 JSON 파일 순서 그대로)
+      jsonNames.forEach(function(name){
+        var taken=!!linkedSet[name];
 
         var btn=document.createElement('button');
         btn.className='link-member-btn'+(taken?' link-member-taken':'');
         btn.setAttribute('data-name',name);
         btn.disabled=taken;
-        btn.innerHTML='<span class="link-member-name">'+name+'</span>'+(taken?'<span class="link-taken-badge">연결됨</span>':'');
+        btn.innerHTML='<span class="link-member-name">'+name+'</span>'
+          +(taken?'<span class="link-taken-badge">연결됨</span>':'');
 
         if(!taken){
           btn.onclick=function(){
@@ -130,8 +148,25 @@
         grid.appendChild(btn);
       });
     }).catch(function(e){
-      console.error('[Auth] 회원 목록 로딩 실패:',e);
-      if(grid) grid.innerHTML='<div style="text-align:center;padding:1rem;color:#8b1a1a;font-size:12px">목록 로딩 실패: '+e.message+'</div>';
+      console.error('[Auth] 연결 상태 로딩 실패:',e);
+      // Firestore 실패해도 JSON 목록은 전부 선택 가능하게
+      if(!grid) return;
+      grid.innerHTML='';
+      jsonNames.forEach(function(name){
+        var btn=document.createElement('button');
+        btn.className='link-member-btn';
+        btn.setAttribute('data-name',name);
+        btn.innerHTML='<span class="link-member-name">'+name+'</span>';
+        btn.onclick=function(){
+          document.querySelectorAll('.link-member-btn').forEach(function(b){ b.classList.remove('selected'); });
+          btn.classList.add('selected');
+          if(confirmBtn){
+            confirmBtn.disabled=false;
+            confirmBtn.textContent='✦  '+name+'으로 연결하기';
+          }
+        };
+        grid.appendChild(btn);
+      });
     });
   }
 
@@ -146,6 +181,7 @@
     var confirmBtn=document.getElementById('linkConfirmBtn');
     if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='연결 중...'; }
 
+    // 선점 여부 재확인 후 저장
     db.collection('members').doc(memberName).get().then(function(doc){
       if(doc.exists && doc.data().uid){
         if(confirmBtn){ confirmBtn.disabled=false; confirmBtn.textContent='✦  '+memberName+'으로 연결하기'; }
@@ -154,11 +190,12 @@
         selected.classList.remove('selected');
         selected.classList.add('link-member-taken');
         selected.innerHTML='<span class="link-member-name">'+memberName+'</span><span class="link-taken-badge">연결됨</span>';
-        confirmBtn.textContent='이름을 선택해주세요';
+        if(confirmBtn) confirmBtn.textContent='이름을 선택해주세요';
         return Promise.reject('taken');
       }
 
       var batch=db.batch();
+      // users/{uid} 생성
       batch.set(db.collection('users').doc(user.uid),{
         memberName:memberName,
         email:user.email||'',
@@ -166,10 +203,13 @@
         photoURL:user.photoURL||'',
         linkedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
-      batch.update(db.collection('members').doc(memberName),{
+      // members/{name} — JSON 전용 회원은 문서가 없으므로 set+merge로 생성
+      batch.set(db.collection('members').doc(memberName),{
+        memberName:memberName,
         uid:user.uid,
         email:user.email||''
-      });
+      },{merge:true});
+
       return batch.commit();
     }).then(function(){
       var modal=document.getElementById('linkModal');
@@ -177,7 +217,6 @@
       window.currentLinkedMember=memberName;
       updateHeaderProfile(user,memberName);
       if(typeof showToast==='function') showToast('✦  '+memberName+'님 연결 완료');
-      // 연결 완료 후 미연결 배너 갱신
       checkUnlinkedMembers();
     }).catch(function(e){
       if(e==='taken') return;
@@ -203,7 +242,7 @@
           window.currentLinkedMember=data.memberName||null;
           updateHeaderProfile(user,data.memberName||null);
           if(linkModal) linkModal.style.display='none';
-          // 로그인 완료 후 미연결 회원 확인
+          // 이미 연결된 사용자에게도 미연결 배너 표시
           checkUnlinkedMembers();
         }else{
           // 기존 로그인 사용자 포함 — users 문서 없으면 본인 확인 필수
