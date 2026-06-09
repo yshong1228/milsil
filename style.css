@@ -665,3 +665,100 @@ body::after{display:none}
 .user-name{font-family:'Cinzel',serif;font-size:11px;color:#c8a84b;letter-spacing:.3px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-logout-btn{background:none;border:1px solid #4a3820;border-radius:2px;padding:4px 10px;font-size:10px;color:#8a7050;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:.3px;transition:all .2s}
 .user-logout-btn:hover{border-color:var(--gold-light);color:var(--gold-light)}
+
+/* ── 본인 확인 모달 ── */
+.link-modal-wrap{
+  position:fixed;inset:0;z-index:10001;
+  background:rgba(28,18,8,0.65);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(3px);
+}
+.link-modal{
+  background:#faf7f0;
+  border:1px solid var(--border);
+  border-top:4px solid var(--gold);
+  box-shadow:4px 4px 0 rgba(139,105,20,0.15),0 8px 40px rgba(0,0,0,0.25);
+  border-radius:2px;
+  padding:2rem 1.75rem 1.5rem;
+  max-width:420px;width:92%;
+  text-align:center;
+  position:relative;
+  max-height:90vh;
+  display:flex;flex-direction:column;
+}
+.link-modal-stamp{
+  position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+  font-family:'Cinzel',serif;font-size:8px;font-weight:700;
+  color:#fff;background:var(--gold);
+  padding:2px 14px;letter-spacing:3px;white-space:nowrap;
+}
+.link-modal-logo{font-size:24px;color:var(--gold);margin-bottom:.75rem}
+.link-modal-title{
+  font-family:'Cinzel',serif;font-size:18px;font-weight:700;
+  color:var(--ink);letter-spacing:2px;margin:0 0 .4rem;
+}
+.link-modal-desc{
+  font-size:12px;color:var(--ink-faint);margin:0 0 1.25rem;
+  font-family:'Noto Serif KR',serif;line-height:1.7;
+}
+.link-google-profile{
+  display:flex;align-items:center;gap:10px;
+  background:#f5f0e0;border:1px solid var(--border);border-radius:2px;
+  padding:10px 14px;margin-bottom:1.25rem;text-align:left;
+  flex-shrink:0;
+}
+.link-google-avatar{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--gold);object-fit:cover;flex-shrink:0;
+}
+.link-google-info{flex:1;min-width:0}
+.link-google-label{font-size:10px;color:var(--ink-faint);font-family:'Cinzel',serif;letter-spacing:.5px}
+.link-google-name{font-size:13px;font-weight:600;color:var(--ink);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-member-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));
+  gap:7px;
+  overflow-y:auto;max-height:260px;
+  padding:2px;margin-bottom:1.25rem;
+  flex:1;
+}
+.link-member-btn{
+  background:#fff;border:1px solid var(--border);border-radius:2px;
+  padding:10px 6px;cursor:pointer;text-align:center;
+  font-family:'Cinzel',serif;font-size:12px;color:var(--ink-dim);
+  transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px;
+  box-shadow:1px 1px 0 rgba(160,144,112,0.15);
+}
+.link-member-btn:hover:not(:disabled){
+  border-color:var(--gold);color:var(--gold-dark);
+  background:#f5f0e0;
+}
+.link-member-btn.selected{
+  border-color:var(--gold);border-width:2px;
+  background:#f0e0b0;color:var(--gold-dark);font-weight:700;
+  box-shadow:0 0 0 2px rgba(139,105,20,0.2);
+}
+.link-member-btn.link-member-taken{
+  background:#f5f0e8;color:#c0b090;cursor:not-allowed;opacity:.7;
+}
+.link-member-name{display:block;font-size:13px}
+.link-taken-badge{
+  font-size:9px;color:#a09070;border:1px solid #d4c4a0;
+  border-radius:8px;padding:1px 6px;font-family:'Cinzel',serif;letter-spacing:.3px;
+}
+.link-confirm-btn{
+  width:100%;
+  background:linear-gradient(135deg,#1c1208,#3a2808);
+  color:#c8a84b;border:1px solid var(--gold);
+  border-radius:2px;padding:13px;
+  font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:.5px;
+  cursor:pointer;transition:all .2s;flex-shrink:0;
+  box-shadow:2px 2px 0 rgba(139,105,20,0.15);
+}
+.link-confirm-btn:not(:disabled):hover{
+  background:linear-gradient(135deg,#3a2808,#8b6914);
+  color:#f5e8c0;
+}
+.link-confirm-btn:disabled{
+  background:#f0e8d8;color:#c0b090;border-color:#d4c4a0;cursor:not-allowed;box-shadow:none;
+}
+.link-note{font-size:10px;color:#c0b090;margin-top:.75rem;font-family:'Cinzel',serif;letter-spacing:.3px;flex-shrink:0}
