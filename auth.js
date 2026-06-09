@@ -23,13 +23,6 @@
     return;
   }
 
-  // JSON 정적 목록 (app.js가 미리 로드) + '미참여 인원' 제외
-  function getJsonMemberNames(){
-    return (window._MEMBERS_LIST_DATA||[]).filter(function(n){
-      return n && n!=='미참여 인원';
-    });
-  }
-
   // ── 헤더 프로필 업데이트 ──
   function updateHeaderProfile(user, memberName){
     var profile=document.getElementById('userProfile');
@@ -47,20 +40,14 @@
     }
   }
 
-  // ── 미연결 회원 배너 ──
-  // JSON 전체 목록 기준으로, Firestore에 uid가 없는 회원을 표시
+  // ── 미연결 회원 배너 ── (Firestore 단일 소스)
   function checkUnlinkedMembers(){
-    var jsonNames=getJsonMemberNames();
-    if(!jsonNames.length) return;
-
     db.collection('members').get().then(function(snap){
-      var linkedSet={};
+      var unlinked=[];
       snap.forEach(function(doc){
         var d=doc.data();
-        if(d.uid) linkedSet[d.memberName||doc.id]=true;
+        if(!d.uid) unlinked.push(d.memberName||doc.id);
       });
-
-      var unlinked=jsonNames.filter(function(n){ return !linkedSet[n]; });
 
       var banner=document.getElementById('unlinkedBanner');
       var countEl=document.getElementById('unlinkedBannerCount');
@@ -84,8 +71,7 @@
     if(banner) banner.style.display='none';
   };
 
-  // ── 본인 확인 모달 표시 ──
-  // JSON 목록을 기반으로 회원을 나열하고, Firestore로 UID 연결 여부만 확인
+  // ── 본인 확인 모달 ── (Firestore 단일 소스)
   function showLinkModal(user){
     var modal=document.getElementById('linkModal');
     if(!modal) return;
@@ -106,67 +92,45 @@
 
     modal.style.display='flex';
 
-    var jsonNames=getJsonMemberNames();
-
-    if(!jsonNames.length){
-      if(grid) grid.innerHTML='<div style="text-align:center;padding:1.5rem;color:#a09070;font-size:12px">등록된 회원이 없습니다<br>관리자에게 문의해주세요</div>';
-      return;
-    }
-
-    // Firestore에서 이미 연결된 이름 목록만 가져옴
     db.collection('members').get().then(function(snap){
-      var linkedSet={};
+      if(!grid) return;
+
+      if(snap.empty){
+        grid.innerHTML='<div style="text-align:center;padding:1.5rem;color:#a09070;font-size:12px">등록된 회원이 없습니다<br>관리자에게 문의해주세요</div>';
+        return;
+      }
+
+      var members=[];
       snap.forEach(function(doc){
         var d=doc.data();
-        if(d.uid) linkedSet[d.memberName||doc.id]=true;
+        members.push({ name: d.memberName||doc.id, taken: !!(d.uid) });
       });
+      members.sort(function(a,b){ return (a.name).localeCompare(b.name,'ko'); });
 
-      if(!grid) return;
       grid.innerHTML='';
-
-      // JSON 목록 기준으로 렌더 (가나다 정렬은 JSON 파일 순서 그대로)
-      jsonNames.forEach(function(name){
-        var taken=!!linkedSet[name];
-
+      members.forEach(function(m){
         var btn=document.createElement('button');
-        btn.className='link-member-btn'+(taken?' link-member-taken':'');
-        btn.setAttribute('data-name',name);
-        btn.disabled=taken;
-        btn.innerHTML='<span class="link-member-name">'+name+'</span>'
-          +(taken?'<span class="link-taken-badge">연결됨</span>':'');
+        btn.className='link-member-btn'+(m.taken?' link-member-taken':'');
+        btn.setAttribute('data-name',m.name);
+        btn.disabled=m.taken;
+        btn.innerHTML='<span class="link-member-name">'+m.name+'</span>'
+          +(m.taken?'<span class="link-taken-badge">연결됨</span>':'');
 
-        if(!taken){
+        if(!m.taken){
           btn.onclick=function(){
             document.querySelectorAll('.link-member-btn').forEach(function(b){ b.classList.remove('selected'); });
             btn.classList.add('selected');
             if(confirmBtn){
               confirmBtn.disabled=false;
-              confirmBtn.textContent='✦  '+name+'으로 연결하기';
+              confirmBtn.textContent='✦  '+m.name+'으로 연결하기';
             }
           };
         }
         grid.appendChild(btn);
       });
     }).catch(function(e){
-      console.error('[Auth] 연결 상태 로딩 실패:',e);
-      // Firestore 실패해도 JSON 목록은 전부 선택 가능하게
-      if(!grid) return;
-      grid.innerHTML='';
-      jsonNames.forEach(function(name){
-        var btn=document.createElement('button');
-        btn.className='link-member-btn';
-        btn.setAttribute('data-name',name);
-        btn.innerHTML='<span class="link-member-name">'+name+'</span>';
-        btn.onclick=function(){
-          document.querySelectorAll('.link-member-btn').forEach(function(b){ b.classList.remove('selected'); });
-          btn.classList.add('selected');
-          if(confirmBtn){
-            confirmBtn.disabled=false;
-            confirmBtn.textContent='✦  '+name+'으로 연결하기';
-          }
-        };
-        grid.appendChild(btn);
-      });
+      console.error('[Auth] 회원 목록 로딩 실패:',e);
+      if(grid) grid.innerHTML='<div style="text-align:center;padding:1rem;color:#8b1a1a;font-size:12px">목록 로딩 실패: '+e.message+'</div>';
     });
   }
 
@@ -181,7 +145,6 @@
     var confirmBtn=document.getElementById('linkConfirmBtn');
     if(confirmBtn){ confirmBtn.disabled=true; confirmBtn.textContent='연결 중...'; }
 
-    // 선점 여부 재확인 후 저장
     db.collection('members').doc(memberName).get().then(function(doc){
       if(doc.exists && doc.data().uid){
         if(confirmBtn){ confirmBtn.disabled=false; confirmBtn.textContent='✦  '+memberName+'으로 연결하기'; }
@@ -195,7 +158,6 @@
       }
 
       var batch=db.batch();
-      // users/{uid} 생성
       batch.set(db.collection('users').doc(user.uid),{
         memberName:memberName,
         email:user.email||'',
@@ -203,13 +165,11 @@
         photoURL:user.photoURL||'',
         linkedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
-      // members/{name} — JSON 전용 회원은 문서가 없으므로 set+merge로 생성
       batch.set(db.collection('members').doc(memberName),{
         memberName:memberName,
         uid:user.uid,
         email:user.email||''
       },{merge:true});
-
       return batch.commit();
     }).then(function(){
       var modal=document.getElementById('linkModal');
@@ -242,10 +202,8 @@
           window.currentLinkedMember=data.memberName||null;
           updateHeaderProfile(user,data.memberName||null);
           if(linkModal) linkModal.style.display='none';
-          // 이미 연결된 사용자에게도 미연결 배너 표시
           checkUnlinkedMembers();
         }else{
-          // 기존 로그인 사용자 포함 — users 문서 없으면 본인 확인 필수
           if(profile) profile.style.display='none';
           showLinkModal(user);
         }
