@@ -13,6 +13,8 @@
   }
 
   var auth, db;
+  window.NICKNAME_MAP={};
+
   try{
     auth=firebase.auth();
     db=firebase.firestore();
@@ -426,6 +428,7 @@
           updateHeaderProfile(user,data.memberName||null);
           if(linkModal) linkModal.style.display='none';
           checkUnlinkedMembers();
+          loadNicknameMap();
           var mpBtn=document.getElementById('tab-mypage');
           if(mpBtn) mpBtn.style.display='flex';
         }else{
@@ -462,6 +465,72 @@
       if(typeof showToast==='function') showToast(msg);
     });
   };
+
+  // ── 닉네임 맵 — 전 사이트 반영 ──
+
+  function loadNicknameMap(){
+    db.collection('users').get().then(function(snap){
+      var map={};
+      snap.forEach(function(doc){
+        var d=doc.data();
+        if(d.memberName && d.nickname && d.nickname.trim()){
+          map[d.memberName]=d.nickname.trim();
+        }
+      });
+      window.NICKNAME_MAP=map;
+      applyNicknameMap();
+    }).catch(function(e){
+      console.warn('[Auth] 닉네임 맵 로드 실패:',e);
+    });
+  }
+
+  function applyNicknameMap(){
+    var map=window.NICKNAME_MAP;
+    if(!map||!Object.keys(map).length) return;
+
+    // 회원명부 — .member-card-btn[data-mname]
+    document.querySelectorAll('.member-card-btn[data-mname]').forEach(function(card){
+      var mname=card.getAttribute('data-mname');
+      var nick=map[mname];
+      if(!nick) return;
+      card.querySelectorAll('span').forEach(function(sp){
+        if(sp.textContent===mname) sp.textContent=nick;
+      });
+      var av=card.querySelector('.member-avatar');
+      if(av && av.textContent===mname.slice(0,1)) av.textContent=nick.slice(0,1);
+    });
+
+    // 모험기록부 — .rv-name (리뷰 작성자)
+    document.querySelectorAll('.rv-name').forEach(function(el){
+      var orig=el.textContent.trim();
+      if(map[orig]) el.textContent=map[orig];
+    });
+  }
+
+  function setupNicknamePatcher(){
+    ['records-page','members-page'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      var timer=null;
+      var obs=new MutationObserver(function(mutations){
+        // 새 엘리먼트 노드가 추가된 경우에만 반응 (텍스트 변경 루프 방지)
+        var hasNewEl=mutations.some(function(m){
+          return m.addedNodes&&Array.prototype.some.call(m.addedNodes,function(n){ return n.nodeType===1; });
+        });
+        if(!hasNewEl) return;
+        clearTimeout(timer);
+        timer=setTimeout(applyNicknameMap, 30);
+      });
+      obs.observe(el,{childList:true,subtree:true});
+    });
+  }
+
+  // DOM 준비 후 패처 설치
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', setupNicknamePatcher);
+  }else{
+    setupNicknamePatcher();
+  }
 
   // ── 케이스파일 아코디언 토글 ──
   window.toggleCSection=function(key){
@@ -558,10 +627,16 @@
 
     db.collection('users').doc(user.uid).update(updateData).then(function(){
       window.currentUserProfile=Object.assign(window.currentUserProfile||{}, updateData);
+      // 닉네임 맵 즉시 반영
+      var me=window.currentLinkedMember;
+      if(me){
+        if(nickname) window.NICKNAME_MAP[me]=nickname;
+        else delete window.NICKNAME_MAP[me];
+        applyNicknameMap();
+      }
       if(typeof showToast==='function') showToast('프로필이 저장되었습니다');
       if(btn) btn.disabled=false;
       window.closeProfileEdit();
-      var me=window.currentLinkedMember;
       if(me) renderMypageProfile(me, user);
     },function(e){
       console.error('[Auth] 프로필 저장 실패:',e);
