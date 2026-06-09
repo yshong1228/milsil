@@ -353,11 +353,15 @@
         <span class="cfile-number" id="cfileNumber">#0000</span>
       </div>
       <div class="cfile-identity">
-        <img id="mypageAvatar" class="cfile-avatar" src="" alt="" style="display:none">
+        <div class="cfile-avatar-wrap">
+          <img id="mypageAvatar" class="cfile-avatar" src="" alt="" style="display:none">
+          <div id="mypageAvatarEmoji" class="cfile-avatar cfile-avatar-emoji" style="display:none"></div>
+        </div>
         <div class="cfile-identity-body">
           <div class="cfile-name" id="mypageName"></div>
           <div class="cfile-rank" id="mypageLevel"></div>
         </div>
+        <button class="cfile-edit-btn" onclick="openProfileEdit()" title="프로필 수정">✎</button>
       </div>
       <div class="cfile-divider"></div>
       <div class="cfile-stats-strip" id="mypageStatsRow"></div>
@@ -393,6 +397,57 @@
         <div class="cfile-sec-body" id="mypageReviews"></div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- 프로필 수정 모달 -->
+<div id="profileEditModal" class="pedit-backdrop" style="display:none" onclick="if(event.target===this)closeProfileEdit()">
+  <div class="pedit-modal">
+    <div class="pedit-header">
+      <span class="pedit-title">PROFILE EDIT</span>
+      <button class="pedit-close" onclick="closeProfileEdit()">✕</button>
+    </div>
+
+    <!-- 아바타 미리보기 + 선택 -->
+    <div class="pedit-avatar-section">
+      <div class="pedit-avatar-preview" id="peditAvatarPreview"></div>
+      <div class="pedit-avatar-tabs">
+        <button class="pedit-tab active" id="peditTabGoogle" onclick="switchAvatarTab('google')">구글 사진</button>
+        <button class="pedit-tab" id="peditTabEmoji" onclick="switchAvatarTab('emoji')">이모지</button>
+      </div>
+      <div id="peditEmojiGrid" class="pedit-emoji-grid" style="display:none">
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🔍">🔍</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🕯️">🕯️</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🗝️">🗝️</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🎩">🎩</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🃏">🃏</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="💀">💀</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🌙">🌙</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🎭">🎭</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🕰️">🕰️</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🗡️">🗡️</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="📜">📜</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🔭">🔭</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🕵️">🕵️</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="⚗️">⚗️</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🪄">🪄</button>
+        <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🎪">🎪</button>
+      </div>
+    </div>
+
+    <!-- 입력 필드 -->
+    <div class="pedit-fields">
+      <label class="pedit-label">닉네임 <span class="pedit-hint">(마이페이지 표시 이름)</span></label>
+      <input id="peditNickname" class="pedit-input" type="text" maxlength="16" placeholder="닉네임 입력 (비워두면 회원명 사용)">
+
+      <label class="pedit-label" style="margin-top:12px">실명 <span class="pedit-hint">(관리자 확인용, 비공개)</span></label>
+      <input id="peditRealName" class="pedit-input" type="text" maxlength="10" placeholder="실명 입력 (선택사항)">
+    </div>
+
+    <div class="pedit-footer">
+      <button class="pedit-cancel" onclick="closeProfileEdit()">취소</button>
+      <button class="pedit-save" onclick="saveProfileEdit()">저장</button>
     </div>
   </div>
 </div>
