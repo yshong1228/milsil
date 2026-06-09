@@ -1080,3 +1080,10 @@ body::after{display:none}
 }
 .pedit-save:hover{background:#1c1208}
 .pedit-save:disabled{opacity:.5;cursor:not-allowed}
+
+/* 로그인 회원 이름 자동완성 필드 */
+.autofilled-name{
+  background:rgba(180,148,60,0.07) !important;
+  border-color:rgba(180,148,60,0.5) !important;
+  color:var(--ink-dim) !important;
+}
