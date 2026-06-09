@@ -252,22 +252,28 @@
     var nameEl=document.getElementById('mypageName');
     var levelEl=document.getElementById('mypageLevel');
     var statsEl=document.getElementById('mypageStatsRow');
+    var numEl=document.getElementById('cfileNumber');
 
     if(avatarEl && user.photoURL){ avatarEl.src=user.photoURL; avatarEl.style.display='block'; }
     if(nameEl) nameEl.textContent=me;
 
-    // app.js getMemberStats 활용 (전역 함수)
+    // 케이스파일 번호 — 이름 문자 코드 기반 4자리
+    if(numEl){
+      var hash=0;
+      for(var i=0;i<me.length;i++) hash=(hash*31+me.charCodeAt(i))&0xffff;
+      numEl.textContent='#'+String(hash).padStart(4,'0').slice(-4);
+    }
+
     var stats={exp:0,avg:0,played:0,reviewCount:0};
     if(typeof getMemberStats==='function') stats=getMemberStats(me)||stats;
 
-    // 레벨 계산 (app.js getLevel 활용)
     var lv=typeof getLevel==='function'?getLevel(stats.exp):Math.floor(stats.exp/5)||1;
     if(levelEl) levelEl.textContent='Lv.'+lv+' 탐정 · EXP '+stats.exp;
     if(statsEl) statsEl.innerHTML=
-      '<div class="mypg-stat"><div class="mypg-stat-val">'+stats.played+'</div><div class="mypg-stat-label">총 플레이</div></div>'+
-      '<div class="mypg-stat"><div class="mypg-stat-val">'+(stats.avg?stats.avg.toFixed(1):'-')+'</div><div class="mypg-stat-label">평균 점수</div></div>'+
-      '<div class="mypg-stat"><div class="mypg-stat-val">'+stats.reviewCount+'</div><div class="mypg-stat-label">작성 리뷰</div></div>'+
-      '<div class="mypg-stat"><div class="mypg-stat-val">'+stats.exp+'</div><div class="mypg-stat-label">경험치</div></div>';
+      '<div class="cfile-stat"><div class="cfile-stat-val">'+stats.played+'</div><div class="cfile-stat-label">PLAYS</div></div>'+
+      '<div class="cfile-stat"><div class="cfile-stat-val">'+(stats.avg?stats.avg.toFixed(1):'-')+'</div><div class="cfile-stat-label">AVG SCORE</div></div>'+
+      '<div class="cfile-stat"><div class="cfile-stat-val">'+stats.reviewCount+'</div><div class="cfile-stat-label">REVIEWS</div></div>'+
+      '<div class="cfile-stat"><div class="cfile-stat-val">'+stats.exp+'</div><div class="cfile-stat-label">EXP</div></div>';
   }
 
   function renderMypageEvents(me){
@@ -278,7 +284,13 @@
       return (ev.participants||[]).some(function(p){ return p.name===me; });
     }).sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
 
-    if(!mine.length){ el.innerHTML='<div class="mypage-empty">참가한 파티 기록이 없습니다</div>'; return; }
+    var cntEl=document.getElementById('csec-events-cnt');
+    if(!mine.length){
+      el.innerHTML='<div class="mypage-empty">참가한 파티 기록이 없습니다</div>';
+      if(cntEl) cntEl.textContent='0';
+      return;
+    }
+    if(cntEl) cntEl.textContent=mine.length+'건';
 
     el.innerHTML=mine.map(function(ev){
       var dateStr=(ev.date||'').replace(/-/g,'.');
@@ -301,7 +313,13 @@
     var mine=allGames.filter(function(g){ return g.scores&&g.scores[me]!==undefined; })
       .sort(function(a,b){ return (b.scores[me]||0)-(a.scores[me]||0); });
 
-    if(!mine.length){ el.innerHTML='<div class="mypage-empty">게임 점수 기록이 없습니다</div>'; return; }
+    var cntElG=document.getElementById('csec-games-cnt');
+    if(!mine.length){
+      el.innerHTML='<div class="mypage-empty">게임 점수 기록이 없습니다</div>';
+      if(cntElG) cntElG.textContent='0';
+      return;
+    }
+    if(cntElG) cntElG.textContent=mine.length+'건';
 
     el.innerHTML=mine.map(function(g){
       var sc=g.scores[me];
@@ -337,7 +355,13 @@
         if(!seen[k]){ seen[k]=true; rvs.push(r); }
       });
       rvs.sort(function(a,b){ return (b.gameName||'').localeCompare(a.gameName||'','ko'); });
-      if(!rvs.length){ el.innerHTML='<div class="mypage-empty">작성한 리뷰가 없습니다</div>'; return; }
+      var cntElR=document.getElementById('csec-reviews-cnt');
+      if(!rvs.length){
+        el.innerHTML='<div class="mypage-empty">작성한 리뷰가 없습니다</div>';
+        if(cntElR) cntElR.textContent='0';
+        return;
+      }
+      if(cntElR) cntElR.textContent=rvs.length+'건';
       el.innerHTML=rvs.map(function(rv){
         var sc=rv.score||0;
         return '<div class="mypg-review-card">'+
@@ -419,6 +443,14 @@
       }
       if(typeof showToast==='function') showToast(msg);
     });
+  };
+
+  // ── 케이스파일 아코디언 토글 ──
+  window.toggleCSection=function(key){
+    var sec=document.getElementById('csec-'+key);
+    if(!sec) return;
+    var isOpen=sec.classList.contains('open');
+    sec.classList.toggle('open',!isOpen);
   };
 
   // ── 로그아웃 ──
