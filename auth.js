@@ -40,8 +40,12 @@
     }
   }
 
-  // ── 미연결 회원 배너 ── (Firestore 단일 소스)
+  // 미연결 배너를 볼 수 있는 관리자 목록
+  var ADMIN_MEMBERS=['양석','추추','항영','사원'];
+
+  // ── 미연결 회원 배너 ── 관리자에게만 표시
   function checkUnlinkedMembers(){
+    if(ADMIN_MEMBERS.indexOf(window.currentLinkedMember)<0) return;
     db.collection('members').get().then(function(snap){
       var unlinked=[];
       snap.forEach(function(doc){
