@@ -601,3 +601,91 @@ body::after{
 .finder-unknown-chev{transition:transform .2s;font-size:10px}
 .finder-unknown-section.open .finder-unknown-chev{transform:rotate(90deg)}
 .finder-unknown-body{margin-top:8px}
+
+/* ── 로그인 오버레이 ── */
+.login-overlay{
+  position:fixed;inset:0;z-index:10000;
+  background:#080808;
+  display:flex;align-items:center;justify-content:center;
+  background-image:
+    radial-gradient(ellipse at 15% 0%,rgba(197,48,48,0.07) 0%,transparent 50%),
+    radial-gradient(ellipse at 85% 100%,rgba(197,48,48,0.05) 0%,transparent 50%);
+}
+.login-card{
+  text-align:center;
+  padding:3rem 2rem;
+  max-width:340px;width:90%;
+  position:relative;
+}
+.login-card::before,.login-card::after{
+  content:'';position:absolute;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(197,48,48,0.3),transparent);
+}
+.login-card::before{top:0}.login-card::after{bottom:0}
+.login-logo{
+  font-size:32px;color:var(--gold);
+  text-shadow:0 0 40px rgba(197,48,48,0.6);
+  display:block;margin-bottom:1rem;
+  animation:logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse{
+  0%,100%{text-shadow:0 0 40px rgba(197,48,48,0.6)}
+  50%{text-shadow:0 0 60px rgba(197,48,48,0.9),0 0 20px rgba(197,48,48,0.4)}
+}
+.login-title{
+  font-family:'Cinzel',serif;
+  font-size:28px;font-weight:700;
+  color:var(--ink);
+  letter-spacing:4px;
+  margin:0 0 .25rem;
+}
+.login-brand{
+  font-family:'Cinzel',serif;
+  font-size:11px;color:var(--gold-dark);
+  letter-spacing:5px;margin:0 0 2rem;
+}
+.login-desc{
+  font-size:13px;color:var(--ink-faint);
+  line-height:1.9;margin:0 0 2rem;
+  font-family:'Noto Serif KR',serif;
+}
+.login-google-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#742020,#c53030,#742020);
+  color:#fff;border:1px solid var(--gold);
+  border-radius:4px;padding:13px 28px;
+  font-family:'Cinzel',serif;font-size:14px;font-weight:600;
+  letter-spacing:.5px;cursor:pointer;
+  box-shadow:0 4px 24px rgba(197,48,48,0.3);
+  transition:all .25s;
+  width:100%;justify-content:center;
+}
+.login-google-btn:hover{
+  background:linear-gradient(135deg,#c53030,#e53e3e,#c53030);
+  box-shadow:0 6px 36px rgba(197,48,48,0.5);
+  transform:translateY(-1px);
+}
+.login-google-btn:active{transform:translateY(0)}
+.login-note{
+  font-size:11px;color:#444;margin-top:1.25rem;
+  font-family:'Cinzel',serif;letter-spacing:.3px;
+}
+
+/* ── 헤더 유저 프로필 ── */
+.user-profile{display:flex;align-items:center;gap:8px}
+.user-avatar{
+  width:28px;height:28px;border-radius:50%;
+  border:1px solid var(--gold-dark);object-fit:cover;
+  box-shadow:0 0 8px rgba(197,48,48,0.2);
+}
+.user-name{
+  font-family:'Cinzel',serif;font-size:11px;
+  color:var(--ink-dim);letter-spacing:.3px;
+  max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.user-logout-btn{
+  background:none;border:1px solid #2a2a2a;border-radius:3px;
+  padding:4px 10px;font-size:10px;color:#555;cursor:pointer;
+  font-family:'Cinzel',serif;letter-spacing:.3px;transition:all .2s;
+}
+.user-logout-btn:hover{border-color:var(--gold-dark);color:var(--gold-dark)}
