@@ -1,0 +1,125 @@
+/* ════════════════════════════════════════════════════════════════
+   심야 극장 — MIDNIGHT THEATER 다크 테마 패치
+   for yshong1228/milsil (바닐라 JS 앱)
+
+   사용법 — 둘 중 하나:
+   (A) 이 파일을 레포에 복사하고 index.html의 <link rel="stylesheet"
+       href="style.css"> "바로 아래"에 추가:
+         <link rel="stylesheet" href="milsil-midnight.css">
+   (B) 또는 이 파일 내용을 style.css "맨 끝"에 붙여넣기.
+
+   원리: 실제 style.css의 모든 클래스가 :root 변수를 참조하므로,
+   아래에서 같은 이름의 변수를 심야 극장 값으로 재정의하면 앱 전체가
+   즉시 다크로 리스킨됩니다. 그 다음 하드코딩된 라이트 색만 덮어씁니다.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── 1. 토큰 재정의 (변수 이름 그대로, 값만 심야 극장으로) ── */
+:root{
+  --gold:#b8924a;          /* brass            */
+  --gold-light:#d9b878;    /* brass light      */
+  --gold-dark:#d9b878;     /* 라벨이 다크 위에서 읽히도록 밝게 */
+  --parchment:#1e1614;     /* raised surface   */
+  --parchment-mid:#1e1614; /* card ground      */
+  --parchment-light:#271b19;
+  --ink:#ece4d4;           /* bone (primary text) */
+  --ink-dim:#b8ae98;
+  --ink-faint:#867c68;
+  --blood:#c0392b;
+  --blood-light:#e08070;
+  --emerald:#5a9a6e;
+  --emerald-light:#7ec890;
+  --steel:#3a3028;
+  --board-bg:#16100f;
+  --border:rgba(217,184,120,.22);
+  --border-dark:rgba(217,184,120,.40);
+  /* 헬퍼 (오버라이드용) */
+  --mt-ink-0:#100c0b; --mt-ink-1:#16100f; --mt-ink-2:#1e1614; --mt-ink-3:#271b19;
+  --mt-bone:#ece4d4; --mt-bone-faint:#867c68;
+  --mt-brass:#b8924a; --mt-brass-lt:#d9b878; --mt-foot:#e6a94e;
+  --mt-seat-lead:#6a8fbf; --mt-seat-supp:#c97090;
+  --mt-sheen:linear-gradient(150deg,#8a6a32,#b8924a 35%,#e7cf98 50%,#b8924a 65%,#8a6a32);
+  --mt-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+}
+
+/* ── 2. 페이지 그라운드 ── */
+body{
+  background-color:#16100f !important;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 50% -4%, rgba(217,184,120,.12), transparent 56%),
+    radial-gradient(ellipse at 50% 118%, rgba(90,26,34,.34), transparent 60%),
+    var(--mt-grain) !important;
+  color:var(--mt-bone);
+}
+body::before{ background:none !important; }
+
+/* ── 3. 카드/패널 그라운드 (하드코딩된 #faf7f0 / #fff 류) ── */
+.form-scroll, .rec-form-card, .quest-card, .game-card, .stat-box,
+.member-card-btn, .member-detail, .pw-modal, .link-modal,
+.finder-unknown-header, .finder-game-row, .role-select-panel{
+  background:linear-gradient(155deg,#211917,#16100f) !important;
+  border-color:var(--border) !important;
+  box-shadow:0 14px 36px rgba(0,0,0,.5) !important;
+}
+.quest-card.past-card, .game-card.past-card{ background:linear-gradient(155deg,#191312,#120d0c) !important; }
+/* 종이 괘선 텍스처 → 그레인 */
+.quest-card::before, .game-card::before{ background:var(--mt-grain) !important; opacity:.5; }
+
+/* ── 4. 입력 필드 (전부 다크) ── */
+input, textarea, select,
+.join-input, .rec-search, .member-search-input, .rec-select,
+.finder-dropdown-input, .pw-input, .rf-input, .talk-input input,
+.talk-name-in, .member-field, .score-cell input{
+  background:var(--mt-ink-2) !important;
+  color:var(--mt-bone) !important;
+  border-color:var(--border) !important;
+}
+input::placeholder, textarea::placeholder{ color:var(--mt-bone-faint) !important; }
+
+/* ── 5. 드롭다운 / 자동완성 ── */
+.autocomplete-list, .finder-dropdown-list{ background:var(--mt-ink-2) !important; border-color:var(--mt-brass) !important; }
+.ac-item, .finder-dropdown-item{ color:var(--mt-bone) !important; border-color:rgba(217,184,120,.12) !important; }
+.ac-item:hover, .ac-item.selected, .finder-dropdown-item:hover{ background:rgba(217,184,120,.10) !important; }
+
+/* ── 6. 아바타 → 카메오 ── */
+.member-avatar, .member-avatar-lg, .talk-avatar{
+  background:radial-gradient(circle at 38% 30%,#2c1f1d,#160f0e) !important;
+  border-color:var(--mt-brass) !important; color:var(--mt-brass-lt) !important;
+}
+
+/* ── 7. 상태 배지 (스탬프) ── */
+.badge-active{ color:var(--mt-foot) !important; border-color:var(--mt-foot) !important; }
+.badge-full{ color:var(--mt-brass-lt) !important; border-color:var(--mt-brass) !important; }
+.badge-ended{ color:var(--mt-bone-faint) !important; border-color:var(--border) !important; }
+
+/* ── 8. 활성 필터/정렬 칩 (#f0e0b0 라이트) ── */
+.f-btn.active, .ms-btn.active{
+  background:rgba(217,184,120,.14) !important;
+  color:var(--mt-brass-lt) !important; border-color:var(--mt-brass) !important;
+}
+
+/* ── 9. 점수 링 (라이트 파스텔 → 다크 틴트) ── */
+.score-ring.s-great{ background:color-mix(in srgb,#74c48e 14%,#16100f) !important; color:#74c48e !important; border-color:#74c48e !important; }
+.score-ring.s-good { background:color-mix(in srgb,#a6c46e 14%,#16100f) !important; color:#a6c46e !important; border-color:#a6c46e !important; }
+.score-ring.s-mid  { background:color-mix(in srgb,#d9b878 14%,#16100f) !important; color:#d9b878 !important; border-color:#d9b878 !important; }
+.score-ring.s-low  { background:color-mix(in srgb,#d98a4a 14%,#16100f) !important; color:#d98a4a !important; border-color:#d98a4a !important; }
+.score-ring.s-bad  { background:color-mix(in srgb,#c0392b 14%,#16100f) !important; color:#c0392b !important; border-color:#c0392b !important; }
+
+/* ── 10. 파티 칩 / 슬롯 채움 (성별 → 좌석색) ── */
+.party-chip.male{ background:rgba(106,143,191,.14) !important; color:var(--mt-seat-lead) !important; border-color:rgba(106,143,191,.4) !important; }
+.party-chip.female{ background:rgba(201,112,144,.14) !important; color:var(--mt-seat-supp) !important; border-color:rgba(201,112,144,.4) !important; }
+.slot-track, .slot-fill.male, .slot-fill.female, .slot-fill.maxed, .sbar-track{ background:rgba(236,228,212,.12) !important; }
+.slot-fill.male{ background:linear-gradient(90deg,#3a5a8a,#6a8fbf) !important; }
+.slot-fill.female{ background:linear-gradient(90deg,#7a1f28,#c97090) !important; }
+.slot-fill.maxed{ background:var(--mt-sheen) !important; }
+
+/* ── 11. 로그인 / 본인확인 오버레이 ── */
+.login-overlay{ background:#16100f !important; background-image:radial-gradient(ellipse at 50% -4%,rgba(217,184,120,.16),transparent 52%) !important; }
+.login-card, .link-google-profile{ background:linear-gradient(155deg,#211917,#16100f) !important; border-color:var(--mt-brass) !important; }
+
+/* ── 12. 작은 태그/통계 색 보정 ── */
+.stat-val, .scroll-title, .section-head-label{ color:var(--mt-brass-lt) !important; }
+.owner-tag, .parti-count, .finder-game-players, .firebase-tag{ background:var(--mt-ink-2) !important; color:var(--mt-bone) !important; border-color:var(--border) !important; }
+
+/* ── (선택) 폰트를 Cormorant로 전면 교체하려면, style.css에서
+   'Cinzel'  →  'Cormorant' 로 일괄 치환하세요. 기본값(Cinzel)도
+   다크 위에서 잘 어울리므로 폰트 교체는 선택사항입니다. ── */
