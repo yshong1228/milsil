@@ -474,32 +474,65 @@
     }
   });
 
+  // ── 환경 감지 ──
+  var _ua=navigator.userAgent;
+  // Android WebView: '; wv)' 마커 또는 인앱브라우저 앱 식별자
+  // iOS WebView: AppleWebKit은 있지만 Safari/ 없음
+  var _isWebView=
+    /; wv\)/.test(_ua) ||
+    /KAKAOTALK|NAVER\(inapp|Line\/[0-9]|Instagram|FBAN|FBAV|NaverSearch|DaumApps/.test(_ua) ||
+    (/iPhone|iPad/.test(_ua) && /AppleWebKit/.test(_ua) && !/Safari\//.test(_ua));
+
+  // ── 인앱브라우저 안내 (Chrome/Safari에서 열도록) ──
+  function _showBrowserGuide(){
+    var existing=document.getElementById('webViewGuideModal');
+    if(existing){ existing.style.display='flex'; return; }
+
+    // Android: intent URL로 Chrome 직접 실행 시도
+    var href=window.location.href;
+    var intentUrl='intent://'+href.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+    var isAndroid=/Android/i.test(_ua);
+
+    var modal=document.createElement('div');
+    modal.id='webViewGuideModal';
+    modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML=
+      '<div style="background:var(--parchment,#1e1614);border:1px solid var(--border,rgba(217,184,120,.3));border-radius:16px;padding:28px 24px;max-width:320px;width:100%;text-align:center;color:var(--ink,#ece4d4);font-family:sans-serif">'+
+        '<div style="font-size:36px;margin-bottom:14px">🌐</div>'+
+        '<div style="font-size:17px;font-weight:700;margin-bottom:10px">외부 브라우저에서 열어주세요</div>'+
+        '<div style="font-size:13px;line-height:1.7;color:var(--ink-dim,#b8ae98);margin-bottom:22px">'+
+          '카카오톡·인스타그램 등 앱 내 브라우저에서는<br>Google 로그인이 지원되지 않습니다.<br>Chrome 또는 Safari에서 접속해 주세요.'+
+        '</div>'+
+        (isAndroid
+          ? '<a href="'+intentUrl+'" style="display:block;background:var(--gold,#b8924a);color:#16100f;padding:12px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700;margin-bottom:10px">Chrome으로 열기</a>'
+          : '')+
+        '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+href+'\');this.textContent=\'복사됨 ✓\'" '+
+          'style="display:block;width:100%;background:none;border:1px solid var(--border,rgba(217,184,120,.3));color:var(--ink-dim,#b8ae98);padding:11px;border-radius:10px;cursor:pointer;font-size:13px;margin-bottom:8px">'+
+          '주소 복사하기</button>'+
+        '<button onclick="document.getElementById(\'webViewGuideModal\').style.display=\'none\'" '+
+          'style="background:none;border:none;color:var(--ink-faint,#867c68);font-size:12px;cursor:pointer;padding:4px">닫기</button>'+
+      '</div>';
+    document.body.appendChild(modal);
+  }
+
   // ── Google 로그인 ──
-  // 모바일: signInWithRedirect (팝업은 iOS/Android에서 신뢰할 수 없음)
-  // 데스크톱: signInWithPopup, 팝업 차단 시 redirect 폴백
-  var _isMobile=/Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent);
-
+  // signInWithRedirect는 WebView에서 Google의 disallowed_useragent(403)를 유발.
+  // 모든 환경에서 signInWithPopup 사용. WebView는 사전 차단 후 안내.
   window.signInWithGoogle=function(){
-    var provider=new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({hl:'ko'});
-
-    if(_isMobile){
-      auth.signInWithRedirect(provider).catch(function(err){
-        console.error('[Auth] Redirect 로그인 실패:',err);
-        if(typeof showToast==='function') showToast('로그인에 실패했습니다. 다시 시도해주세요.');
-      });
+    if(_isWebView){
+      _showBrowserGuide();
       return;
     }
+
+    var provider=new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({hl:'ko'});
 
     auth.signInWithPopup(provider).catch(function(err){
       console.error('[Auth] Google 로그인 실패:',err);
       var msg;
       switch(err.code){
         case 'auth/popup-closed-by-user': msg='로그인이 취소되었습니다';break;
-        case 'auth/popup-blocked':
-          // 팝업 차단 → redirect 폴백
-          auth.signInWithRedirect(provider).catch(function(){});
-          return;
+        case 'auth/popup-blocked': msg='팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해주세요';break;
         case 'auth/network-request-failed': msg='네트워크 오류가 발생했습니다';break;
         default: msg='로그인에 실패했습니다';
       }
