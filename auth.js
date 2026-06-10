@@ -158,7 +158,7 @@
       });
     }).catch(function(e){
       console.error('[Auth] 회원 목록 로딩 실패:',e);
-      if(grid) grid.innerHTML='<div style="text-align:center;padding:1rem;color:#8b1a1a;font-size:12px">목록 로딩 실패: '+e.message+'</div>';
+      if(grid) grid.innerHTML='<div style="text-align:center;padding:1rem;color:#8b1a1a;font-size:12px">목록 로딩 실패: '+esc(e.message)+'</div>';
     });
   }
 
@@ -471,6 +471,7 @@
       var banner=document.getElementById('unlinkedBanner');
       if(banner) banner.style.display='none';
       window.currentLinkedMember=null;
+      _profileMapLoaded=false;
     }
   });
 
@@ -490,8 +491,9 @@
     var isSamsungInt   =  /SamsungBrowser\/\d/.test(_ua);
     var isFirefoxMob   =  /Firefox\/\d/.test(_ua);
     var isEdgeMob      =  /EdgA\/\d/.test(_ua);
-    var isNaverApp     =  /NAVER\(inapp/.test(_ua); // 네이버 앱 내부 브라우저는 제외
-    if(isNaverApp) return false;
+    var isNaverApp     =  /NAVER\(inapp/.test(_ua);
+    var isKakaoLine    =  /KAKAOTALK|Line\/\d|Instagram|FBAN|FBAV/i.test(_ua);
+    if(isNaverApp||isKakaoLine) return false;
     return isChromeMobile||isSafariiOS||isSamsungInt||isFirefoxMob||isEdgeMob;
   })();
 
@@ -545,10 +547,9 @@
         // clipboard API 없는 구형 WebView 대응
         var ta=document.createElement('textarea');
         ta.value=_siteUrl; ta.style.cssText='position:fixed;opacity:0';
-        document.body.appendChild(ta); ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        document.getElementById('wvCopyBtn').textContent='복사됨 ✓';
+        document.body.appendChild(ta);
+        try{ ta.select(); document.execCommand('copy'); document.getElementById('wvCopyBtn').textContent='복사됨 ✓'; }
+        finally{ document.body.removeChild(ta); }
       }
     });
   }
@@ -575,7 +576,7 @@
       var msg;
       switch(err.code){
         case 'auth/popup-closed-by-user': msg='로그인이 취소되었습니다';break;
-        case 'auth/popup-blocked': msg='팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해주세요';break;
+        case 'auth/popup-blocked': auth.signInWithRedirect(provider); return;
         case 'auth/network-request-failed': msg='네트워크 오류가 발생했습니다';break;
         default: msg='로그인에 실패했습니다';
       }
@@ -621,11 +622,12 @@
       var nick=nickMap[mname];
       var avData=avMap[mname];
 
-      // 닉네임 교체
-      if(nick){
+      // 닉네임 교체 (data-nick-set 가드로 재처리 방지)
+      if(nick && !card.getAttribute('data-nick-set')){
         card.querySelectorAll('span').forEach(function(sp){
           if(sp.textContent===mname) sp.textContent=nick;
         });
+        card.setAttribute('data-nick-set','1');
       }
 
       // 아바타 교체 (이미 처리된 카드 건너뜀)
