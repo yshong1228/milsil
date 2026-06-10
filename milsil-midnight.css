@@ -169,6 +169,10 @@ option{ background:#1e1614; color:var(--mt-bone); }
 .slot-full-badge{ color:var(--mt-brass-lt) !important; border-color:var(--mt-brass) !important; }
 .gender-label, .slot-count, .mstat-label, .rf-label, .rv-text, .talk-text{ color:var(--mt-bone-dim, #b8ae98) !important; }
 
+/* ── 15. 페르소나 칭호 — 파란색 → 보라색 ── */
+.role-persona{ color:#a855f7 !important; }
+.role-badge.role-persona{ border-color:rgba(168,85,247,.35) !important; background:rgba(168,85,247,.10) !important; }
+
 /* ── (선택) 폰트를 Cormorant로 전면 교체하려면, style.css에서
    'Cinzel'  →  'Cormorant' 로 일괄 치환하세요. 기본값(Cinzel)도
    다크 위에서 잘 어울리므로 폰트 교체는 선택사항입니다. ── */
