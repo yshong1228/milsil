@@ -430,6 +430,7 @@
   // ── Auth 상태 변경 감지 ──
   auth.onAuthStateChanged(function(user){
     window.currentUser=user;
+    if(user && typeof window._onAuthReady==='function') window._onAuthReady(user);
     var overlay=document.getElementById('loginOverlay');
     var profile=document.getElementById('userProfile');
     var linkModal=document.getElementById('linkModal');
@@ -465,7 +466,7 @@
         updateHeaderProfile(user,null);
       });
     }else{
-      if(overlay) overlay.style.display='flex';
+      if(overlay && !window._suppressLoginOverlay) overlay.style.display='flex';
       if(profile) profile.style.display='none';
       if(linkModal) linkModal.style.display='none';
       var banner=document.getElementById('unlinkedBanner');
