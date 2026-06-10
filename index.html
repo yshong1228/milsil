@@ -6,7 +6,7 @@
 <title>밀실극장 파티 게시판</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+KR:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="milsil-midnight.css">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -14,51 +14,739 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════
+   밀실극장 · 프리미엄 통합 디자인 시스템 v3.0
+   랜딩 페이지 + 앱 공통 토큰 + 앱 프리미엄 오버라이드
+═══════════════════════════════════════════════ */
+
+/* ── 디자인 토큰 ── */
+:root {
+  --lp-ink-0:  #0c0907;
+  --lp-ink-1:  #16100f;
+  --lp-ink-2:  #1e1614;
+  --lp-ink-3:  #271b19;
+  --lp-ink-4:  #32211e;
+  --lp-gold:        #b8924a;
+  --lp-gold-mid:    #c9a45a;
+  --lp-gold-light:  #d9b878;
+  --lp-gold-bright: #e6c878;
+  --lp-bone:        #ece4d4;
+  --lp-bone-dim:    #c8bca8;
+  --lp-bone-faint:  #9a8d76;
+  --lp-bone-ghost:  #6a6050;
+  --lp-border:      rgba(217,184,120,.16);
+  --lp-border-mid:  rgba(217,184,120,.30);
+  --lp-grad-gold:   linear-gradient(135deg,#6b4e1e 0%,#b8924a 35%,#e6c878 52%,#b8924a 68%,#6b4e1e 100%);
+  --lp-grad-card:   linear-gradient(155deg,#221917 0%,#16100f 100%);
+  --lp-shadow:      0 8px 32px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4);
+  --lp-glow:        0 0 24px rgba(184,146,74,.22), 0 0 60px rgba(184,146,74,.07);
+  --lp-ease:        cubic-bezier(.4,0,.2,1);
+  --lp-ease-out:    cubic-bezier(.16,1,.3,1);
+  --lp-grain:       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+}
+
+/* ── 뷰 전환 ── */
+#app-view { transition: opacity .6s var(--lp-ease-out); }
+
+/* ══════════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════════ */
+
+/* ── 랜딩 베이스 ── */
+#landing-view {
+  background-color: var(--lp-ink-1);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -5%, rgba(184,146,74,.13) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 115%, rgba(90,26,34,.28) 0%, transparent 58%),
+    var(--lp-grain);
+  color: var(--lp-bone);
+  font-family: 'Noto Sans KR', -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+#landing-view *, #landing-view *::before, #landing-view *::after { box-sizing: border-box; }
+#landing-view a { color: inherit; text-decoration: none; }
+#landing-view ul { list-style: none; margin: 0; padding: 0; }
+
+/* ── LP 네비게이션 ── */
+.lp-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+  padding: 1rem 0;
+  transition: background .4s var(--lp-ease), padding .4s var(--lp-ease), box-shadow .4s var(--lp-ease);
+}
+.lp-nav.scrolled {
+  background: rgba(12,9,7,.93);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: .6rem 0;
+  box-shadow: 0 1px 0 var(--lp-border), 0 8px 32px rgba(0,0,0,.45);
+}
+.lp-nav__inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 clamp(1.25rem,4vw,3rem);
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+}
+.lp-nav__logo {
+  display: flex; align-items: center; gap: .6rem;
+  font-family: 'Cinzel', 'Noto Serif KR', serif;
+  font-size: .8rem; letter-spacing: .22em;
+  color: var(--lp-gold-light); flex-shrink: 0;
+}
+.lp-nav__logo-mark {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--lp-border-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .7rem; color: var(--lp-gold);
+  background: rgba(184,146,74,.06);
+}
+.lp-nav__links { display: flex; align-items: center; gap: 2rem; }
+.lp-nav__link {
+  font-family: 'Cinzel', serif; font-size: .6rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--lp-bone-faint); cursor: pointer;
+  position: relative; padding-bottom: 2px;
+  transition: color .2s; border: none; background: none;
+}
+.lp-nav__link::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; right: 100%;
+  height: 1px; background: var(--lp-gold);
+  transition: right .4s var(--lp-ease-out);
+}
+.lp-nav__link:hover { color: var(--lp-gold-light); }
+.lp-nav__link:hover::after { right: 0; }
+.lp-nav__enter {
+  font-family: 'Cinzel', serif; font-size: .6rem; letter-spacing: .15em;
+  padding: .45rem 1.15rem; border-radius: 2px;
+  border: 1px solid var(--lp-border-mid); background: none;
+  color: var(--lp-gold-light); cursor: pointer;
+  transition: all .3s var(--lp-ease); flex-shrink: 0;
+}
+.lp-nav__enter:hover {
+  background: rgba(184,146,74,.1); border-color: var(--lp-gold);
+  box-shadow: 0 0 16px rgba(184,146,74,.2);
+}
+.lp-ham {
+  display: none; flex-direction: column; gap: 5px;
+  padding: 4px; background: none; border: none; cursor: pointer;
+}
+.lp-ham span {
+  display: block; width: 22px; height: 1.5px;
+  background: var(--lp-gold-light);
+  transition: all .3s var(--lp-ease); transform-origin: center;
+}
+.lp-ham.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.lp-ham.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.lp-ham.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+.lp-drawer {
+  display: none; position: fixed; inset: 0; top: 52px;
+  background: rgba(12,9,7,.97); backdrop-filter: blur(20px);
+  z-index: 499; padding: 3rem 2rem;
+  flex-direction: column; gap: 1.5rem;
+}
+.lp-drawer.open { display: flex; }
+.lp-drawer a, .lp-drawer button {
+  font-family: 'Cinzel', serif; font-size: 1.1rem; letter-spacing: .1em;
+  color: var(--lp-bone-dim); cursor: pointer;
+  padding-bottom: .75rem; border-bottom: 1px solid var(--lp-border);
+  border-left: none; border-right: none; border-top: none; border-radius: 0;
+  background: none; text-align: left; transition: color .2s;
+}
+.lp-drawer a:hover, .lp-drawer button:hover { color: var(--lp-gold-light); }
+@media (max-width:1023px) {
+  .lp-nav__links { display: none; }
+  .lp-ham { display: flex; }
+}
+
+/* ── LP 히어로 ── */
+.lp-hero {
+  min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 80px clamp(1.25rem,4vw,3rem) 4rem;
+  position: relative; overflow: hidden;
+}
+.lp-hero__bg { position: absolute; inset: 0; pointer-events: none; }
+.lp-hero__radial {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 0%, rgba(184,146,74,.13) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(90,26,34,.32) 0%, transparent 55%);
+}
+.lp-ring {
+  position: absolute; border-radius: 50%; border: 1px solid var(--lp-border);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none; animation: lpGlow 6s ease-in-out infinite;
+}
+.lp-ring--1 { width: clamp(280px,40vw,420px); height: clamp(280px,40vw,420px); }
+.lp-ring--2 { width: clamp(440px,55vw,640px); height: clamp(440px,55vw,640px); opacity: .45; animation-duration: 8s; animation-delay: 1s; }
+.lp-ring--3 { width: clamp(600px,72vw,900px); height: clamp(600px,72vw,900px); opacity: .2; animation-duration: 10s; animation-delay: 2s; }
+@keyframes lpGlow {
+  0%,100% { box-shadow: 0 0 20px rgba(184,146,74,.08); }
+  50%      { box-shadow: 0 0 40px rgba(184,146,74,.28), 0 0 80px rgba(184,146,74,.07); }
+}
+.lp-hero__content { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; }
+.lp-hero__overline {
+  display: flex; align-items: center; justify-content: center; gap: .8rem;
+  margin-bottom: 1.5rem; animation: lpFadeIn .8s ease .2s both;
+}
+.lp-hero__overline hr { width: 36px; height: 1px; background: var(--lp-grad-gold); border: none; opacity: .7; margin: 0; }
+.lp-hero__overline span {
+  font-family: 'Cinzel', serif; font-size: .6rem; letter-spacing: .3em; color: var(--lp-gold);
+}
+.lp-hero__title {
+  font-family: 'Cinzel', 'Noto Serif KR', serif;
+  font-size: clamp(3.2rem,8vw,7rem); font-weight: 400;
+  letter-spacing: .1em; line-height: 1.05; margin: 0;
+  background: linear-gradient(160deg, var(--lp-bone) 20%, var(--lp-gold-light) 50%, var(--lp-bone) 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: lpFadeUp .9s ease .35s both, lpShimmer 7s linear 1.5s infinite;
+}
+.lp-hero__sub {
+  font-family: 'Cinzel', serif; font-size: .6rem; letter-spacing: .45em;
+  color: var(--lp-gold); margin: .5rem 0 2rem;
+  animation: lpFadeIn .8s ease .55s both;
+}
+.lp-hero__desc {
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+  font-size: clamp(1rem,1.8vw,1.2rem); font-weight: 300;
+  color: var(--lp-bone-dim); line-height: 1.9;
+  max-width: 540px; margin: 0 auto 2.5rem;
+  animation: lpFadeUp .8s ease .7s both;
+}
+.lp-hero__ctas {
+  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  animation: lpFadeUp .8s ease .85s both;
+}
+.lp-scroll-hint {
+  position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: .4rem;
+  z-index: 1; animation: lpFadeIn 1s ease 1.4s both;
+}
+.lp-scroll-hint span {
+  font-family: 'Cinzel', serif; font-size: .5rem; letter-spacing: .3em; color: var(--lp-bone-ghost);
+}
+.lp-scroll-hint em {
+  display: block; width: 1px; height: 36px;
+  background: linear-gradient(to bottom, var(--lp-gold), transparent);
+  animation: lpFloat 2s ease-in-out infinite; font-style: normal;
+}
+
+/* ── LP 버튼 ── */
+.lp-btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .75rem 1.75rem; border-radius: 2px;
+  font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .14em;
+  cursor: pointer; border: none; position: relative; overflow: hidden;
+  transition: all .4s var(--lp-ease); text-decoration: none;
+}
+.lp-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.08) 50%, transparent 70%);
+  transform: translateX(-100%); transition: transform .7s var(--lp-ease-out);
+}
+.lp-btn:hover::before { transform: translateX(100%); }
+.lp-btn--primary {
+  background: var(--lp-grad-gold); color: var(--lp-ink-1);
+  box-shadow: 0 4px 20px rgba(184,146,74,.35);
+}
+.lp-btn--primary:hover { box-shadow: 0 6px 30px rgba(184,146,74,.55); transform: translateY(-1px); }
+.lp-btn--ghost {
+  border: 1px solid var(--lp-border-mid); background: none; color: var(--lp-bone-dim);
+}
+.lp-btn--ghost:hover {
+  border-color: var(--lp-gold); color: var(--lp-gold-light);
+  background: rgba(184,146,74,.06);
+}
+
+/* ── LP 섹션 공통 ── */
+.lp-sec { padding: clamp(4rem,8vw,7rem) clamp(1.25rem,4vw,3rem); }
+.lp-con { max-width: 1200px; margin: 0 auto; }
+.lp-sec-hd { text-align: center; margin-bottom: 3rem; }
+.lp-sec-label {
+  display: block; font-family: 'Cinzel', serif;
+  font-size: .6rem; letter-spacing: .25em; text-transform: uppercase;
+  color: var(--lp-gold); margin-bottom: .75rem;
+}
+.lp-sec-title {
+  font-family: 'Cinzel', 'Noto Serif KR', serif;
+  font-size: clamp(1.6rem,3vw,2.4rem); font-weight: 400;
+  letter-spacing: .06em; color: var(--lp-bone); margin: 0 0 .75rem;
+}
+.lp-sec-sub {
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+  font-size: 1.05rem; font-weight: 300;
+  color: var(--lp-bone-faint); line-height: 1.8; max-width: 500px; margin: 0 auto;
+}
+.lp-orn {
+  display: flex; align-items: center; justify-content: center; gap: .75rem;
+  margin: 1rem 0; color: var(--lp-gold); font-size: .65rem;
+}
+.lp-orn::before, .lp-orn::after {
+  content: ''; width: 40px; height: 1px;
+  background: var(--lp-grad-gold); opacity: .6;
+}
+
+/* ── LP 카드 ── */
+.lp-card {
+  background: var(--lp-grad-card); border: 1px solid var(--lp-border); border-radius: 3px;
+  box-shadow: var(--lp-shadow); position: relative; overflow: hidden;
+  transition: transform .4s var(--lp-ease), box-shadow .4s var(--lp-ease), border-color .4s var(--lp-ease);
+}
+.lp-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--lp-grain); opacity: .4; pointer-events: none;
+}
+.lp-card:hover { transform: translateY(-4px); box-shadow: var(--lp-shadow), var(--lp-glow); border-color: var(--lp-border-mid); }
+
+/* ── LP 피처 ── */
+.lp-feature-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem;
+}
+.lp-feature-card { padding: 2.5rem 2rem; text-align: center; }
+.lp-feature-icon {
+  width: 52px; height: 52px; margin: 0 auto 1.25rem; border-radius: 50%;
+  border: 1px solid var(--lp-border-mid); display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; color: var(--lp-gold); background: rgba(184,146,74,.06);
+  transition: all .3s var(--lp-ease);
+}
+.lp-card:hover .lp-feature-icon {
+  background: rgba(184,146,74,.14); border-color: var(--lp-gold);
+  box-shadow: 0 0 20px rgba(184,146,74,.25);
+}
+.lp-feature-title {
+  font-family: 'Cinzel', serif; font-size: .875rem; letter-spacing: .1em;
+  color: var(--lp-gold-light); margin: 0 0 .75rem;
+}
+.lp-feature-desc {
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+  font-size: .975rem; font-weight: 300; color: var(--lp-bone-faint); line-height: 1.8; margin: 0;
+}
+
+/* ── LP 통계 ── */
+.lp-stats-strip {
+  padding: 3rem clamp(1.25rem,4vw,3rem);
+  border-top: 1px solid var(--lp-border); border-bottom: 1px solid var(--lp-border);
+  background: linear-gradient(90deg, transparent, rgba(184,146,74,.04), transparent);
+}
+.lp-stats-grid {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1px; background: var(--lp-border);
+}
+.lp-stat { background: var(--lp-ink-1); text-align: center; padding: 2.5rem 1rem; }
+.lp-stat-num {
+  display: block; font-family: 'Cinzel', serif;
+  font-size: clamp(2.5rem,5vw,4rem); font-weight: 400; line-height: 1; margin-bottom: .5rem;
+  background: var(--lp-grad-gold); background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.lp-stat-label {
+  font-family: 'Cinzel', serif; font-size: .6rem; letter-spacing: .2em; color: var(--lp-bone-ghost);
+}
+
+/* ── LP 캐스트 ── */
+.lp-cast-grid {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 1.25rem; margin-top: 2rem;
+}
+.lp-cast-member { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+.lp-cast-av {
+  width: 64px; height: 64px; border-radius: 50%;
+  border: 1px solid var(--lp-border);
+  background: radial-gradient(circle at 38% 30%, #32211e, #16100f);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 1.25rem; color: var(--lp-gold-light);
+  transition: all .3s var(--lp-ease); position: relative; overflow: hidden;
+}
+.lp-cast-av::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.06), transparent 60%);
+}
+.lp-cast-member:hover .lp-cast-av {
+  border-color: var(--lp-gold);
+  box-shadow: 0 0 20px rgba(184,146,74,.3), 0 0 0 3px rgba(184,146,74,.08);
+  transform: translateY(-3px);
+}
+.lp-cast-name {
+  font-family: 'Cinzel', serif; font-size: .575rem; letter-spacing: .18em;
+  color: var(--lp-bone-ghost); transition: color .2s;
+}
+.lp-cast-member:hover .lp-cast-name { color: var(--lp-gold-light); }
+
+/* ── LP CTA ── */
+.lp-cta-sec { padding: clamp(4rem,8vw,7rem) clamp(1.25rem,4vw,3rem); position: relative; overflow: hidden; }
+.lp-cta-sec__bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(90,26,34,.18) 0%, transparent 65%);
+  pointer-events: none;
+}
+.lp-cta-frame {
+  position: relative; max-width: 700px; margin: 0 auto;
+  padding: clamp(2.5rem,5vw,4rem) clamp(1.5rem,4vw,3rem);
+  text-align: center; border: 1px solid var(--lp-border-mid); border-radius: 4px;
+  background: rgba(22,16,15,.6); backdrop-filter: blur(8px);
+  animation: lpGlow 5s ease-in-out infinite;
+}
+.lp-corner {
+  position: absolute; width: 16px; height: 16px;
+  border-color: var(--lp-gold); border-style: solid; opacity: .5;
+}
+.lp-corner--tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.lp-corner--tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+.lp-corner--bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+.lp-corner--br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+.lp-cta-badge {
+  display: inline-block; font-family: 'Cinzel', serif;
+  font-size: .55rem; letter-spacing: .3em; color: var(--lp-gold);
+  border: 1px solid var(--lp-border-mid); padding: .3rem .9rem;
+  margin-bottom: 1.5rem; border-radius: 2px;
+}
+.lp-cta-title {
+  font-family: 'Cinzel', 'Noto Serif KR', serif;
+  font-size: clamp(1.8rem,4vw,3rem); font-weight: 400;
+  letter-spacing: .06em; color: var(--lp-bone); margin: 0 0 1rem;
+}
+.lp-cta-desc {
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+  font-size: 1rem; font-weight: 300; color: var(--lp-bone-faint);
+  line-height: 1.9; margin: 0 0 2rem;
+}
+
+/* ── LP 푸터 ── */
+.lp-footer {
+  padding: 3rem clamp(1.25rem,4vw,3rem);
+  border-top: 1px solid var(--lp-border);
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,.3));
+}
+.lp-footer__inner {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: center;
+}
+.lp-footer__logo {
+  font-family: 'Cinzel', serif; font-size: .75rem; letter-spacing: .2em;
+  color: var(--lp-gold); margin-bottom: .4rem;
+}
+.lp-footer__copy { font-family: 'Cinzel', serif; font-size: .575rem; letter-spacing: .1em; color: var(--lp-bone-ghost); }
+.lp-footer__links { display: flex; flex-direction: column; gap: .4rem; text-align: right; }
+.lp-footer__link {
+  font-family: 'Cinzel', serif; font-size: .575rem; letter-spacing: .15em;
+  color: var(--lp-bone-ghost); cursor: pointer; transition: color .2s;
+  background: none; border: none;
+}
+.lp-footer__link:hover { color: var(--lp-gold-light); }
+
+/* ── LP 애니메이션 ── */
+@keyframes lpFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes lpFadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes lpShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes lpFloat {
+  0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); }
+}
+.lp-reveal {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity .7s var(--lp-ease-out), transform .7s var(--lp-ease-out);
+}
+.lp-reveal.lp-vis { opacity: 1; transform: translateY(0); }
+.lp-reveal--d1 { transition-delay: 80ms; }
+.lp-reveal--d2 { transition-delay: 160ms; }
+.lp-reveal--d3 { transition-delay: 240ms; }
+
+/* ── LP 반응형 ── */
+@media (max-width:767px) {
+  .lp-feature-grid { grid-template-columns: 1fr; }
+  .lp-stats-grid { grid-template-columns: 1fr; }
+  .lp-footer__inner { grid-template-columns: 1fr; text-align: center; }
+  .lp-footer__links { text-align: center; flex-direction: row; justify-content: center; flex-wrap: wrap; }
+  .lp-ring--2, .lp-ring--3 { display: none; }
+}
+@media (min-width:768px) and (max-width:1023px) {
+  .lp-feature-grid { grid-template-columns: repeat(3,1fr); }
+}
+
+/* ══════════════════════════════════════════════
+   APP VIEW — 프리미엄 오버라이드
+══════════════════════════════════════════════ */
+
+/* 길드 헤더 업그레이드 */
+.guild-header {
+  background: linear-gradient(180deg, #1c1208 0%, #221608 100%) !important;
+  border-bottom: 1px solid rgba(217,184,120,.28) !important;
+  position: sticky !important; top: 0 !important; z-index: 200 !important;
+  box-shadow: 0 2px 20px rgba(0,0,0,.5) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* 탭 네비 업그레이드 */
+.tab-nav {
+  background: rgba(14,10,8,.96) !important;
+  backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid rgba(217,184,120,.2) !important;
+  position: sticky !important; top: 52px !important; z-index: 190 !important;
+  padding: 0 !important; display: flex !important; gap: 0 !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3) !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+.tab-nav::-webkit-scrollbar { display: none !important; }
+.tab-btn {
+  font-family: 'Cinzel', serif !important;
+  font-size: .6rem !important; letter-spacing: .12em !important;
+  padding: .9rem 1.2rem !important; border-radius: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  display: flex !important; align-items: center !important; gap: .4rem !important;
+  white-space: nowrap !important; background: none !important;
+  transition: all .25s ease !important; flex-shrink: 0 !important;
+}
+.tab-btn:hover {
+  color: var(--gold-light, #d9b878) !important;
+  background: rgba(217,184,120,.05) !important;
+}
+.tab-btn.active {
+  color: var(--gold-light, #d9b878) !important;
+  border-bottom-color: var(--gold, #b8924a) !important;
+  background: rgba(217,184,120,.06) !important;
+}
+@media (max-width:639px) {
+  .tab-btn { padding: .75rem .7rem !important; font-size: .5rem !important; gap: .3rem !important; }
+  .tab-btn svg { display: none !important; }
+}
+</style>
 </head>
 <body>
 
-<!-- ── 로그인 오버레이 ── -->
-<div id="loginOverlay" class="login-overlay">
-  <div class="login-card">
-    <div class="login-logo">✦</div>
-    <h1 class="login-title">밀실극장</h1>
-    <p class="login-brand">파티 게시판</p>
-    <p class="login-desc">회원 전용 서비스입니다<br>Google 계정으로 로그인해 주세요</p>
-    <button class="login-google-btn" onclick="signInWithGoogle()">
-      <svg width="18" height="18" viewBox="0 0 48 48">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-      </svg>
-      Google로 로그인
-    </button>
-    <p class="login-note">초대된 회원만 이용 가능합니다</p>
-  </div>
-</div>
+<!-- ════════════════════════════════════════
+     STATE MACHINE — 랜딩↔앱 전환 초기화
+     (auth.js 로드 전에 실행되어야 함)
+════════════════════════════════════════ -->
+<script>
+window._suppressLoginOverlay = true;  // auth.js가 overlay를 자동으로 띄우지 않도록
+window._inApp = false;
 
-<!-- ── 본인 확인 모달 (최초 로그인 시) ── -->
-<div id="linkModal" class="link-modal-wrap" style="display:none">
-  <div class="link-modal">
-    <div class="link-modal-stamp">IDENTITY CHECK</div>
-    <div class="link-modal-logo">✦</div>
-    <h2 class="link-modal-title">본인 확인</h2>
-    <p class="link-modal-desc">명부에서 본인 이름을 선택해주세요</p>
-    <div class="link-google-profile">
-      <img id="linkGoogleAvatar" class="link-google-avatar" src="" alt="" style="display:none">
-      <div class="link-google-info">
-        <div class="link-google-label">연결 계정</div>
-        <div class="link-google-name" id="linkGoogleName"></div>
+window.enterApp = function() {
+  if (window._inApp) return;
+  if (!window.currentUser) {
+    // 로그인 필요 — overlay 표시
+    window._suppressLoginOverlay = false;
+    var ov = document.getElementById('loginOverlay');
+    if (ov) ov.style.display = 'flex';
+    return;
+  }
+  window._inApp = true;
+  var lv = document.getElementById('landing-view');
+  var av = document.getElementById('app-view');
+  if (!lv || !av) return;
+  lv.style.transition = 'opacity .55s ease';
+  lv.style.opacity = '0';
+  setTimeout(function() {
+    lv.style.display = 'none';
+    av.style.display = 'block';
+    av.style.opacity = '0';
+    requestAnimationFrame(function() {
+      av.style.transition = 'opacity .55s ease';
+      av.style.opacity = '1';
+    });
+    // lp-nav fixed 제거 (앱뷰 스크롤 방해 없도록)
+    var nav = document.getElementById('lpNav');
+    if (nav) nav.style.display = 'none';
+  }, 560);
+};
+
+// auth.js onAuthStateChanged 에서 호출됨 (로그인 감지)
+window._onAuthReady = function(user) {
+  if (!user) return;
+  setTimeout(window.enterApp, 300);
+};
+</script>
+
+<!-- ════════════════════════════════════════
+     LANDING VIEW
+════════════════════════════════════════ -->
+<div id="landing-view">
+
+  <!-- ── 네비게이션 ── -->
+  <nav class="lp-nav" id="lpNav">
+    <div class="lp-nav__inner">
+      <div class="lp-nav__logo">
+        <div class="lp-nav__logo-mark">✦</div>
+        밀실극장
+      </div>
+      <div class="lp-nav__links">
+        <button class="lp-nav__link" onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'})">FEATURES</button>
+        <button class="lp-nav__link" onclick="document.getElementById('lp-cast').scrollIntoView({behavior:'smooth'})">CAST</button>
+        <button class="lp-nav__link" onclick="document.getElementById('lp-cta').scrollIntoView({behavior:'smooth'})">ENTER</button>
+        <button class="lp-nav__enter" onclick="enterApp()">파티 게시판 입장</button>
+      </div>
+      <button class="lp-ham" id="lpHam" onclick="(function(){var h=document.getElementById('lpHam'),d=document.getElementById('lpDrawer');h.classList.toggle('open');d.classList.toggle('open');})()" aria-label="메뉴">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="lp-drawer" id="lpDrawer">
+      <button onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'});document.getElementById('lpHam').click()">FEATURES</button>
+      <button onclick="document.getElementById('lp-cast').scrollIntoView({behavior:'smooth'});document.getElementById('lpHam').click()">CAST</button>
+      <button onclick="enterApp();document.getElementById('lpHam').click()">파티 게시판 입장</button>
+    </div>
+  </nav>
+
+  <!-- ── 히어로 ── -->
+  <section class="lp-hero">
+    <div class="lp-hero__bg">
+      <div class="lp-hero__radial"></div>
+      <div class="lp-ring lp-ring--1"></div>
+      <div class="lp-ring lp-ring--2"></div>
+      <div class="lp-ring lp-ring--3"></div>
+    </div>
+    <div class="lp-hero__content">
+      <div class="lp-hero__overline">
+        <hr><span>MURDER MYSTERY SALON</span><hr>
+      </div>
+      <h1 class="lp-hero__title">밀실극장</h1>
+      <p class="lp-hero__sub">THE GUILD · PARTY BOARD</p>
+      <p class="lp-hero__desc">
+        추리와 연기가 교차하는 밤,<br>
+        탐정들이 모여 사건을 해결합니다.<br>
+        당신의 파티를 구성하세요.
+      </p>
+      <div class="lp-hero__ctas">
+        <button class="lp-btn lp-btn--primary" onclick="enterApp()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l6 6-6 6M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          파티 게시판 입장
+        </button>
+        <button class="lp-btn lp-btn--ghost" onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'})">
+          더 알아보기
+        </button>
       </div>
     </div>
-    <div class="link-member-grid" id="linkMemberGrid"></div>
-    <button class="link-confirm-btn" id="linkConfirmBtn" onclick="confirmMemberLink()" disabled>이름을 선택해주세요</button>
-    <p class="link-note">선택 후 변경은 관리자에게 문의해주세요</p>
+    <div class="lp-scroll-hint">
+      <span>SCROLL</span>
+      <em></em>
+    </div>
+  </section>
+
+  <!-- ── 피처 ── -->
+  <section class="lp-sec" id="lp-features">
+    <div class="lp-con">
+      <div class="lp-sec-hd lp-reveal">
+        <span class="lp-sec-label">FEATURES</span>
+        <h2 class="lp-sec-title">길드 서비스</h2>
+        <div class="lp-orn">✦</div>
+        <p class="lp-sec-sub">밀실극장 탐정 길드가 제공하는<br>세 가지 핵심 서비스</p>
+      </div>
+      <div class="lp-feature-grid">
+        <div class="lp-card lp-feature-card lp-reveal lp-reveal--d1">
+          <div class="lp-feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div class="lp-feature-title">파티 매칭</div>
+          <p class="lp-feature-desc">날짜·시간·작품명을 공고하고 파티원을 모집합니다. 회원 상호 간 실시간으로 퀘스트 게시판을 공유합니다.</p>
+        </div>
+        <div class="lp-card lp-feature-card lp-reveal lp-reveal--d2">
+          <div class="lp-feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          </div>
+          <div class="lp-feature-title">게임 아카이브</div>
+          <p class="lp-feature-desc">플레이한 머더미스터리 작품의 평점·난이도·리뷰를 기록합니다. 길드 전체의 방대한 게임 데이터베이스를 구축합니다.</p>
+        </div>
+        <div class="lp-card lp-feature-card lp-reveal lp-reveal--d3">
+          <div class="lp-feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <div class="lp-feature-title">탐정 프로필</div>
+          <p class="lp-feature-desc">회원 개인의 파티 기록, 플레이 이력, 명탐정 등급을 추적합니다. 당신만의 탐정 케이스파일을 완성하세요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 통계 스트립 ── -->
+  <div class="lp-stats-strip">
+    <div class="lp-stats-grid">
+      <div class="lp-stat lp-reveal">
+        <span class="lp-stat-num" data-count="91">91</span>
+        <span class="lp-stat-label">TOTAL CASES</span>
+      </div>
+      <div class="lp-stat lp-reveal lp-reveal--d1">
+        <span class="lp-stat-num" data-count="642">642</span>
+        <span class="lp-stat-label">PLAYERS</span>
+      </div>
+      <div class="lp-stat lp-reveal lp-reveal--d2">
+        <span class="lp-stat-num" data-count="41">41</span>
+        <span class="lp-stat-label">DETECTIVES</span>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- ── 캐스트 ── -->
+  <section class="lp-sec" id="lp-cast">
+    <div class="lp-con">
+      <div class="lp-sec-hd lp-reveal">
+        <span class="lp-sec-label">CAST</span>
+        <h2 class="lp-sec-title">탐정 길드원</h2>
+        <div class="lp-orn">✦</div>
+        <p class="lp-sec-sub">사건을 함께 해결하는 동료 탐정들</p>
+      </div>
+      <div class="lp-cast-grid lp-reveal">
+        <div class="lp-cast-member"><div class="lp-cast-av">양</div><span class="lp-cast-name">양석</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">류</div><span class="lp-cast-name">류건</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">정</div><span class="lp-cast-name">정원</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">예</div><span class="lp-cast-name">예림</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">소</div><span class="lp-cast-name">소현</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">지</div><span class="lp-cast-name">지수</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">민</div><span class="lp-cast-name">민주</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">수</div><span class="lp-cast-name">수빈</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">서</div><span class="lp-cast-name">서연</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">민</div><span class="lp-cast-name">민서</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">재</div><span class="lp-cast-name">재준</span></div>
+        <div class="lp-cast-member"><div class="lp-cast-av">유</div><span class="lp-cast-name">유진</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="lp-cta-sec" id="lp-cta">
+    <div class="lp-cta-sec__bg"></div>
+    <div class="lp-cta-frame lp-reveal">
+      <div class="lp-corner lp-corner--tl"></div>
+      <div class="lp-corner lp-corner--tr"></div>
+      <div class="lp-corner lp-corner--bl"></div>
+      <div class="lp-corner lp-corner--br"></div>
+      <div class="lp-cta-badge">INVITATION ONLY</div>
+      <h2 class="lp-cta-title">사건의 막이 오릅니다</h2>
+      <p class="lp-cta-desc">초대된 탐정만 입장할 수 있습니다.<br>Google 계정으로 신원을 확인하세요.</p>
+      <button class="lp-btn lp-btn--primary" onclick="enterApp()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l6 6-6 6M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        파티 게시판 입장
+      </button>
+    </div>
+  </section>
+
+  <!-- ── 푸터 ── -->
+  <footer class="lp-footer">
+    <div class="lp-footer__inner">
+      <div>
+        <div class="lp-footer__logo">✦ 밀실극장</div>
+        <div class="lp-footer__copy">MURDER MYSTERY SALON &copy; 2024</div>
+      </div>
+      <div class="lp-footer__links">
+        <button class="lp-footer__link" onclick="enterApp()">파티 게시판</button>
+        <button class="lp-footer__link" onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'})">서비스 안내</button>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /#landing-view -->
+
+<!-- ════════════════════════════════════════
+     APP VIEW (로그인 후 표시)
+════════════════════════════════════════ -->
+<div id="app-view" style="display:none;opacity:0">
 
 <div class="guild-header">
-  <!-- 유저 프로필 (로그인 후 표시) -->
   <div id="userProfile" class="user-profile" style="display:none">
     <img id="userAvatarImg" class="user-avatar" src="" alt="">
     <span id="userNameText" class="user-name"></span>
@@ -76,8 +764,6 @@
   </button>
 </div>
 
-
-<!-- ── 탭 네비게이션 ── -->
 <div class="tab-nav">
   <button class="tab-btn active" id="tab-board" onclick="switchTab('board')">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="6" width="10" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="10" width="11" height="1.5" rx=".75" fill="currentColor"/></svg>
@@ -100,7 +786,7 @@
     마이페이지
   </button>
 </div>
-<!-- ── 미연결 회원 알림 배너 ── -->
+
 <div id="unlinkedBanner" class="unlinked-banner" style="display:none">
   <div class="unlinked-banner-inner">
     <span class="unlinked-banner-icon">✦</span>
@@ -118,7 +804,6 @@
 
 <div id="board-page" class="page">
   <div class="page-deco">✦ ── ── ── ── ── ── ── ── ── ✦</div>
-
   <div class="form-scroll" id="formCard">
     <div class="scroll-title" id="formTitleLabel">✦ 새 퀘스트 공고 ✦</div>
     <div class="form-grid">
@@ -140,7 +825,6 @@
       <button class="btn-post" id="submitBtn" onclick="submitEvent()">게시하기</button>
     </div>
   </div>
-
   <div class="filter-row">
     <span>정렬</span>
     <button class="f-btn active" id="sortAsc" onclick="setSort('asc')">날짜순</button>
@@ -149,72 +833,12 @@
     <button class="f-btn active" id="filterAll" onclick="setFilter('all')">전체</button>
     <button class="f-btn" id="filterUpcoming" onclick="setFilter('upcoming')">예정만</button>
   </div>
-
   <div id="eventList"><div class="loading">☽ 게시판을 불러오는 중... ☾</div></div>
 </div>
-
-
-<!-- 비밀번호 모달 -->
-<div class="pw-modal-wrap hidden" id="pwModalWrap">
-  <div class="pw-modal">
-    <div class="pw-title" id="pwTitle">✦ 관리자 인증 ✦</div>
-    <input type="password" class="pw-input" id="pwInput" maxlength="4" placeholder="····" oninput="pwKeyInput(this)" onkeydown="if(event.key==='Enter')confirmPw()">
-    <div class="pw-error" id="pwError"></div>
-    <div class="pw-btns">
-      <button class="pw-cancel" onclick="closePwModal()">취소</button>
-      <button class="pw-confirm" onclick="confirmPw()">확인</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-(function(){
-  function loadApp(){
-    function go(){
-      var s=document.createElement('script');
-      s.src='app.js';
-      s.onload=function(){
-        // app.js 로드 후 auth.js 로드
-        var a=document.createElement('script');
-        a.src='auth.js';
-        document.body.appendChild(a);
-      };
-      document.body.appendChild(s);
-    }
-    if(document.readyState==='loading'){
-      document.addEventListener('DOMContentLoaded',go);
-    }else{
-      go();
-    }
-  }
-  function fail(err){
-    var list=document.getElementById('eventList');
-    if(list)list.innerHTML='<div class="empty" style="color:#8b1a1a">데이터 로딩 실패: '+(err&&err.message||err)+'<br>로컬에서 여는 경우 http 서버로 실행해 주세요 (예: python3 -m http.server).</div>';
-    console.error('data load failed',err);
-  }
-  if(!window.fetch){fail(new Error('fetch API 미지원 브라우저'));return;}
-  Promise.all([
-    fetch('data/games.json').then(function(r){return r.json();}),
-    fetch('data/reviews.json').then(function(r){return r.json();}),
-    fetch('data/memberStats.json').then(function(r){return r.json();}),
-    fetch('data/membersList.json').then(function(r){return r.json();})
-  ]).then(function(res){
-    window._GAMES_DATA=res[0];
-    window._XLSX_REVIEWS_DATA=res[1];
-    window._MEMBER_STATS_DATA=res[2];
-    window._MEMBERS_LIST_DATA=res[3];
-    loadApp();
-  }).catch(fail);
-})();
-</script>
 
 <div id="records-page">
   <div class="page-deco" style="margin-bottom:1rem">✦ ── 길드 모험 기록 ── ✦</div>
   <div class="stat-row" id="statRow"></div>
-
-  <!-- 기록 추가 폼 -->
   <div class="rec-form-card" id="recFormCard">
     <div class="scroll-title" id="recFormTitle">✦ 새 게임 기록 추가 ✦</div>
     <div class="form-grid">
@@ -233,7 +857,6 @@
       <button class="btn-post" id="recSubmitBtn" onclick="submitGame()">기록 저장</button>
     </div>
   </div>
-
   <div class="rec-controls-top">
     <div class="rec-controls" style="flex:1;margin-bottom:0">
       <input type="text" class="rec-search" id="recSearch" placeholder="🔍 게임명 검색..." oninput="debouncedFilterGames()">
@@ -343,10 +966,7 @@
 
 <div class="toast" id="toast2" style="display:none"></div>
 
-<!-- ── 마이페이지 ── -->
 <div id="mypage-page" style="display:none">
-
-  <!-- 케이스파일 헤더 -->
   <div class="cfile-wrap">
     <div class="cfile-header">
       <div class="cfile-top-bar">
@@ -367,10 +987,7 @@
       <div class="cfile-divider"></div>
       <div class="cfile-stats-strip" id="mypageStatsRow"></div>
     </div>
-
-    <!-- 아코디언 섹션 -->
     <div class="cfile-sections">
-
       <div class="cfile-section" id="csec-events">
         <button class="cfile-sec-hd" onclick="toggleCSection('events')">
           <span class="cfile-arrow" id="carrow-events">▸</span>
@@ -379,7 +996,6 @@
         </button>
         <div class="cfile-sec-body" id="mypageEvents"></div>
       </div>
-
       <div class="cfile-section" id="csec-games">
         <button class="cfile-sec-hd" onclick="toggleCSection('games')">
           <span class="cfile-arrow" id="carrow-games">▸</span>
@@ -388,7 +1004,6 @@
         </button>
         <div class="cfile-sec-body" id="mypageGames"></div>
       </div>
-
       <div class="cfile-section" id="csec-reviews">
         <button class="cfile-sec-hd" onclick="toggleCSection('reviews')">
           <span class="cfile-arrow" id="carrow-reviews">▸</span>
@@ -397,8 +1012,67 @@
         </button>
         <div class="cfile-sec-body" id="mypageReviews"></div>
       </div>
-
     </div>
+  </div>
+</div>
+
+<div class="pw-modal-wrap hidden" id="pwModalWrap">
+  <div class="pw-modal">
+    <div class="pw-title" id="pwTitle">✦ 관리자 인증 ✦</div>
+    <input type="password" class="pw-input" id="pwInput" maxlength="4" placeholder="····" oninput="pwKeyInput(this)" onkeydown="if(event.key==='Enter')confirmPw()">
+    <div class="pw-error" id="pwError"></div>
+    <div class="pw-btns">
+      <button class="pw-cancel" onclick="closePwModal()">취소</button>
+      <button class="pw-confirm" onclick="confirmPw()">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+</div><!-- /#app-view -->
+
+<!-- ════════════════════════════════════════
+     SHARED MODALS (position:fixed — 항상 DOM에 존재)
+════════════════════════════════════════ -->
+
+<!-- 로그인 오버레이 -->
+<div id="loginOverlay" class="login-overlay" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">✦</div>
+    <h1 class="login-title">밀실극장</h1>
+    <p class="login-brand">파티 게시판</p>
+    <p class="login-desc">회원 전용 서비스입니다<br>Google 계정으로 로그인해 주세요</p>
+    <button class="login-google-btn" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Google로 로그인
+    </button>
+    <p class="login-note">초대된 회원만 이용 가능합니다</p>
+  </div>
+</div>
+
+<!-- 본인 확인 모달 -->
+<div id="linkModal" class="link-modal-wrap" style="display:none">
+  <div class="link-modal">
+    <div class="link-modal-stamp">IDENTITY CHECK</div>
+    <div class="link-modal-logo">✦</div>
+    <h2 class="link-modal-title">본인 확인</h2>
+    <p class="link-modal-desc">명부에서 본인 이름을 선택해주세요</p>
+    <div class="link-google-profile">
+      <img id="linkGoogleAvatar" class="link-google-avatar" src="" alt="" style="display:none">
+      <div class="link-google-info">
+        <div class="link-google-label">연결 계정</div>
+        <div class="link-google-name" id="linkGoogleName"></div>
+      </div>
+    </div>
+    <div class="link-member-grid" id="linkMemberGrid"></div>
+    <button class="link-confirm-btn" id="linkConfirmBtn" onclick="confirmMemberLink()" disabled>이름을 선택해주세요</button>
+    <p class="link-note">선택 후 변경은 관리자에게 문의해주세요</p>
   </div>
 </div>
 
@@ -409,8 +1083,6 @@
       <span class="pedit-title">PROFILE EDIT</span>
       <button class="pedit-close" onclick="closeProfileEdit()">✕</button>
     </div>
-
-    <!-- 아바타 미리보기 + 선택 -->
     <div class="pedit-avatar-section">
       <div class="pedit-avatar-preview" id="peditAvatarPreview"></div>
       <div class="pedit-avatar-tabs">
@@ -436,16 +1108,12 @@
         <button class="pedit-emoji-btn" onclick="selectEmoji(this)" data-emoji="🎪">🎪</button>
       </div>
     </div>
-
-    <!-- 입력 필드 -->
     <div class="pedit-fields">
       <label class="pedit-label">닉네임 <span class="pedit-hint">(마이페이지 표시 이름)</span></label>
       <input id="peditNickname" class="pedit-input" type="text" maxlength="16" placeholder="닉네임 입력 (비워두면 회원명 사용)">
-
       <label class="pedit-label" style="margin-top:12px">실명 <span class="pedit-hint">(관리자 확인용, 비공개)</span></label>
       <input id="peditRealName" class="pedit-input" type="text" maxlength="10" placeholder="실명 입력 (선택사항)">
     </div>
-
     <div class="pedit-footer">
       <button class="pedit-cancel" onclick="closeProfileEdit()">취소</button>
       <button class="pedit-save" onclick="saveProfileEdit()">저장</button>
@@ -453,6 +1121,107 @@
   </div>
 </div>
 
+<!-- ════════════════════════════════════════
+     DATA LOADER + APP/AUTH SCRIPTS
+════════════════════════════════════════ -->
+<script>
+(function(){
+  function loadApp(){
+    function go(){
+      var s=document.createElement('script');
+      s.src='app.js';
+      s.onload=function(){
+        var a=document.createElement('script');
+        a.src='auth.js';
+        document.body.appendChild(a);
+      };
+      document.body.appendChild(s);
+    }
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',go);
+    }else{
+      go();
+    }
+  }
+  function fail(err){
+    var list=document.getElementById('eventList');
+    if(list)list.innerHTML='<div class="empty" style="color:#8b1a1a">데이터 로딩 실패: '+(err&&err.message||err)+'<br>로컬에서 여는 경우 http 서버로 실행해 주세요 (예: python3 -m http.server).</div>';
+    console.error('data load failed',err);
+  }
+  if(!window.fetch){fail(new Error('fetch API 미지원 브라우저'));return;}
+  Promise.all([
+    fetch('data/games.json').then(function(r){return r.json();}),
+    fetch('data/reviews.json').then(function(r){return r.json();}),
+    fetch('data/memberStats.json').then(function(r){return r.json();}),
+    fetch('data/membersList.json').then(function(r){return r.json();})
+  ]).then(function(res){
+    window._GAMES_DATA=res[0];
+    window._XLSX_REVIEWS_DATA=res[1];
+    window._MEMBER_STATS_DATA=res[2];
+    window._MEMBERS_LIST_DATA=res[3];
+    loadApp();
+  }).catch(fail);
+})();
+</script>
+
+<!-- ════════════════════════════════════════
+     LANDING PAGE INTERACTIVITY
+════════════════════════════════════════ -->
+<script>
+(function(){
+  // 네비 스크롤 감지
+  var nav = document.getElementById('lpNav');
+  if (nav) {
+    window.addEventListener('scroll', function() {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+  }
+
+  // IntersectionObserver — reveal 애니메이션
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) { e.target.classList.add('lp-vis'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.lp-reveal').forEach(function(el) { io.observe(el); });
+  } else {
+    document.querySelectorAll('.lp-reveal').forEach(function(el) { el.classList.add('lp-vis'); });
+  }
+
+  // 통계 카운트업 (IntersectionObserver 재활용)
+  var countObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (!e.isIntersecting) return;
+      var el = e.target;
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      var start = 0, dur = 1600, step = 16;
+      var t = setInterval(function() {
+        start += step;
+        var progress = Math.min(start / dur, 1);
+        var ease = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(ease * target);
+        if (progress >= 1) { el.textContent = target; clearInterval(t); }
+      }, step);
+      countObserver.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count]').forEach(function(el) { countObserver.observe(el); });
+
+  // 3D tilt 피처 카드
+  document.querySelectorAll('.lp-feature-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var r = card.getBoundingClientRect();
+      var x = (e.clientX - r.left) / r.width - 0.5;
+      var y = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = 'translateY(-4px) rotateX(' + (-y * 8) + 'deg) rotateY(' + (x * 8) + 'deg)';
+    });
+    card.addEventListener('mouseleave', function() {
+      card.style.transform = '';
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
-
