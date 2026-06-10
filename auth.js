@@ -14,6 +14,8 @@
 
   var auth, db;
   window.NICKNAME_MAP={};
+  window.AVATAR_MAP={};
+  var _profileMapLoaded=false;
 
   try{
     auth=firebase.auth();
@@ -425,10 +427,12 @@
             avatarType: data.avatarType||'google',
             avatarEmoji: data.avatarEmoji||'🔍'
           };
+          // 구글 photoURL을 Firestore에 최신화 (비동기, 실패 무시)
+          if(user.photoURL) db.collection('users').doc(user.uid).set({photoURL:user.photoURL},{merge:true}).catch(function(){});
           updateHeaderProfile(user,data.memberName||null);
           if(linkModal) linkModal.style.display='none';
           checkUnlinkedMembers();
-          loadNicknameMap();
+          loadMemberProfileMap();
           applyAutoFill();
           var mpBtn=document.getElementById('tab-mypage');
           if(mpBtn) mpBtn.style.display='flex';
@@ -467,88 +471,111 @@
     });
   };
 
-  // ── 닉네임 맵 — 전 사이트 반영 ──
+  // ── 프로필 맵 (닉네임 + 아바타) — 전 사이트 반영 ──
 
-  function loadNicknameMap(){
+  // 헬퍼: 디바운스 타이머 맵
+  var _debTimers={};
+  function _deb(key,fn,ms){ clearTimeout(_debTimers[key]); _debTimers[key]=setTimeout(fn,ms); }
+
+  // 헬퍼: mutation에 새 element 노드가 있는지
+  function _hasNewEl(m){ return m.addedNodes&&Array.prototype.some.call(m.addedNodes,function(n){ return n.nodeType===1; }); }
+
+  // users 컬렉션 1회 쿼리로 닉네임·아바타 맵 동시 구축
+  function loadMemberProfileMap(){
+    if(_profileMapLoaded) return;
     db.collection('users').get().then(function(snap){
-      var map={};
+      var nickMap={}, avMap={};
       snap.forEach(function(doc){
         var d=doc.data();
-        if(d.memberName && d.nickname && d.nickname.trim()){
-          map[d.memberName]=d.nickname.trim();
-        }
+        if(!d.memberName) return;
+        if(d.nickname&&d.nickname.trim()) nickMap[d.memberName]=d.nickname.trim();
+        avMap[d.memberName]={type:d.avatarType||'google', emoji:d.avatarEmoji||'🔍', url:d.photoURL||''};
       });
-      window.NICKNAME_MAP=map;
-      applyNicknameMap();
-    }).catch(function(e){
-      console.warn('[Auth] 닉네임 맵 로드 실패:',e);
-    });
+      window.NICKNAME_MAP=nickMap;
+      window.AVATAR_MAP=avMap;
+      _profileMapLoaded=true;
+      applyMemberProfiles();
+    }).catch(function(e){ console.warn('[Auth] 프로필 맵 로드 실패:',e); });
   }
 
-  function applyNicknameMap(){
-    var map=window.NICKNAME_MAP;
-    if(!map||!Object.keys(map).length) return;
+  // 닉네임 교체 + 아바타 교체를 한 번의 DOM 패스로 처리
+  function applyMemberProfiles(){
+    var nickMap=window.NICKNAME_MAP||{};
+    var avMap=window.AVATAR_MAP||{};
 
-    // 회원명부 — .member-card-btn[data-mname]
+    // 회원명부 카드
     document.querySelectorAll('.member-card-btn[data-mname]').forEach(function(card){
       var mname=card.getAttribute('data-mname');
-      var nick=map[mname];
-      if(!nick) return;
-      card.querySelectorAll('span').forEach(function(sp){
-        if(sp.textContent===mname) sp.textContent=nick;
-      });
-      var av=card.querySelector('.member-avatar');
-      if(av && av.textContent===mname.slice(0,1)) av.textContent=nick.slice(0,1);
+      var nick=nickMap[mname];
+      var avData=avMap[mname];
+
+      // 닉네임 교체
+      if(nick){
+        card.querySelectorAll('span').forEach(function(sp){
+          if(sp.textContent===mname) sp.textContent=nick;
+        });
+      }
+
+      // 아바타 교체 (이미 처리된 카드 건너뜀)
+      if(avData && !card.getAttribute('data-av-set')){
+        var av=card.querySelector('.member-avatar');
+        if(av){
+          if(avData.type==='emoji'){
+            av.textContent=avData.emoji;
+            av.style.fontSize='18px';
+          }else if(avData.url){
+            av.innerHTML='<img src="'+avData.url+'" loading="lazy" alt="">';
+          }else if(nick){
+            av.textContent=nick.slice(0,1);
+          }
+          card.setAttribute('data-av-set','1');
+        }
+      }else if(nick && !avData){
+        // 아바타 데이터 없으면 첫글자만 닉네임 첫글자로
+        var av2=card.querySelector('.member-avatar');
+        if(av2&&av2.textContent===mname.slice(0,1)) av2.textContent=nick.slice(0,1);
+      }
     });
 
-    // 모험기록부 — .rv-name (리뷰 작성자)
+    // 모험기록부 리뷰 작성자 이름
     document.querySelectorAll('.rv-name').forEach(function(el){
       var orig=el.textContent.trim();
-      if(map[orig]) el.textContent=map[orig];
+      if(nickMap[orig]) el.textContent=nickMap[orig];
     });
   }
 
-  function setupNicknamePatcher(){
-    // 닉네임 교체 옵저버 (records-page, members-page)
-    ['records-page','members-page'].forEach(function(id){
-      var el=document.getElementById(id);
-      if(!el) return;
-      var timer=null;
-      var obs=new MutationObserver(function(mutations){
-        var hasNewEl=mutations.some(function(m){
-          return m.addedNodes&&Array.prototype.some.call(m.addedNodes,function(n){ return n.nodeType===1; });
-        });
-        if(!hasNewEl) return;
-        clearTimeout(timer);
-        timer=setTimeout(applyNicknameMap, 30);
-      });
-      obs.observe(el,{childList:true,subtree:true});
-    });
+  // 옵저버 통합 설치 — 페이지당 1개, 역할별로 분리
+  function setupObservers(){
+    // members-page: 프로필(닉네임+아바타) 패치
+    var membersEl=document.getElementById('members-page');
+    if(membersEl){
+      new MutationObserver(function(muts){
+        if(muts.some(_hasNewEl)) _deb('mem',applyMemberProfiles,30);
+      }).observe(membersEl,{childList:true,subtree:true});
+    }
 
-    // 이름 자동완성 옵저버 (board-page, records-page)
-    // records-page에서 리뷰 폼 open 클래스 변경도 감지
-    ['board-page','records-page'].forEach(function(id){
-      var el=document.getElementById(id);
-      if(!el) return;
-      var timer=null;
-      function scheduleAutoFill(){
-        clearTimeout(timer);
-        timer=setTimeout(applyAutoFill, 30);
-      }
-      var obs=new MutationObserver(function(mutations){
-        var relevant=mutations.some(function(m){
-          if(m.type==='childList'){
-            return Array.prototype.some.call(m.addedNodes||[],function(n){ return n.nodeType===1; });
-          }
-          if(m.type==='attributes' && m.attributeName==='class'){
-            return m.target.classList.contains('open');
-          }
-          return false;
+    // records-page: 프로필 패치 + 리뷰 폼 열릴 때 자동완성
+    var recordsEl=document.getElementById('records-page');
+    if(recordsEl){
+      new MutationObserver(function(muts){
+        var newEl=muts.some(_hasNewEl);
+        var formOpen=muts.some(function(m){
+          return m.type==='attributes'&&m.attributeName==='class'
+            &&m.target.classList&&m.target.classList.contains('review-form')
+            &&m.target.classList.contains('open');
         });
-        if(relevant) scheduleAutoFill();
-      });
-      obs.observe(el,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-    });
+        if(newEl) _deb('rec-prof',applyMemberProfiles,30);
+        if(newEl||formOpen) _deb('rec-fill',applyAutoFill,30);
+      }).observe(recordsEl,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+    }
+
+    // board-page: 파티 폼 자동완성
+    var boardEl=document.getElementById('board-page');
+    if(boardEl){
+      new MutationObserver(function(muts){
+        if(muts.some(_hasNewEl)) _deb('board',applyAutoFill,30);
+      }).observe(boardEl,{childList:true,subtree:true});
+    }
   }
 
   // ── 이름 자동완성 ──
@@ -604,15 +631,15 @@
     };
   }
 
-  // DOM 준비 후 패처·패치 설치
+  // DOM 준비 후 옵저버·패치 설치
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded', function(){
-      setupNicknamePatcher();
+      setupObservers();
       patchJoinEvent();
       patchSubmitReview();
     });
   }else{
-    setupNicknamePatcher();
+    setupObservers();
     patchJoinEvent();
     patchSubmitReview();
   }
@@ -712,12 +739,17 @@
 
     db.collection('users').doc(user.uid).update(updateData).then(function(){
       window.currentUserProfile=Object.assign(window.currentUserProfile||{}, updateData);
-      // 닉네임 맵 즉시 반영
+      // 닉네임·아바타 맵 즉시 반영
       var me=window.currentLinkedMember;
       if(me){
         if(nickname) window.NICKNAME_MAP[me]=nickname;
         else delete window.NICKNAME_MAP[me];
-        applyNicknameMap();
+        var cur=window.AVATAR_MAP[me]||{};
+        window.AVATAR_MAP[me]={type:_peditAvatarType,emoji:_peditSelectedEmoji,url:cur.url||''};
+        // 카드 아바타 재렌더를 위해 data-av-set 초기화
+        var card=document.querySelector('.member-card-btn[data-mname="'+me+'"]');
+        if(card) card.removeAttribute('data-av-set');
+        applyMemberProfiles();
       }
       if(typeof showToast==='function') showToast('프로필이 저장되었습니다');
       if(btn) btn.disabled=false;
