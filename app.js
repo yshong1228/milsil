@@ -592,7 +592,7 @@ function cardHTML(ev){
     +'<div class="card-footer">'
     +'<button class="f-act" onclick="startEdit(\''+ev.id+'\',event)">\u2712 \uc218\uc815</button>'
     +'<button class="f-act danger" onclick="deleteEvent(\''+ev.id+'\');event.stopPropagation()">\u2715 \ucca0\ud68c</button>'
-    +'</div></div>';
+    +'</div></div></div>';
 }
 
 bindQuery('events',col,function(snap){
@@ -2316,5 +2316,6 @@ window._finder={
     };
   }
 };
+
 
 
