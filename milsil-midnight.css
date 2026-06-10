@@ -55,7 +55,10 @@ body::before{ background:none !important; }
 /* ── 3. 카드/패널 그라운드 (하드코딩된 #faf7f0 / #fff 류) ── */
 .form-scroll, .rec-form-card, .quest-card, .game-card, .stat-box,
 .member-card-btn, .member-detail, .pw-modal, .link-modal,
-.finder-unknown-header, .finder-game-row, .role-select-panel{
+.finder-unknown-header, .finder-game-row, .role-select-panel,
+.cfile-wrap, .cfile-header, .cfile-section, .cfile-sec-body,
+.pedit-modal, .pedit-avatar-section, .review-item, .member-game-row,
+.review-form, .game-review-section{
   background:linear-gradient(155deg,#211917,#16100f) !important;
   border-color:var(--border) !important;
   box-shadow:0 14px 36px rgba(0,0,0,.5) !important;
@@ -119,6 +122,52 @@ input::placeholder, textarea::placeholder{ color:var(--mt-bone-faint) !important
 /* ── 12. 작은 태그/통계 색 보정 ── */
 .stat-val, .scroll-title, .section-head-label{ color:var(--mt-brass-lt) !important; }
 .owner-tag, .parti-count, .finder-game-players, .firebase-tag{ background:var(--mt-ink-2) !important; color:var(--mt-bone) !important; border-color:var(--border) !important; }
+
+/* ── 13. 텍스트/아이콘 가독성 보정 (다크 위 저대비 글자) ── */
+/* 네이티브 컨트롤(달력·시계·드롭다운 화살표)도 다크 스킴으로 */
+input, textarea, select{ color-scheme:dark; }
+/* 탭 비활성 글자(#7a6a40)가 어두워 안 보임 */
+.tab-btn{ color:var(--mt-bone-faint) !important; }
+.tab-btn:hover{ color:var(--mt-brass-lt) !important; }
+/* 카드 호버 시 제목이 #1c1008로 바뀌어 사라짐 */
+.quest-card:hover .quest-name{ color:var(--mt-bone) !important; }
+.past-card .quest-name{ color:#a89a82 !important; }
+.past-card .quest-num, .past-card .quest-time, .past-card .rune-dow{ color:#9a8d76 !important; }
+/* 순위 숫자 */
+.rank-num.gold{ color:var(--mt-brass-lt) !important; }
+.rank-num.silver{ color:#c9c2b4 !important; }
+.rank-num.bronze{ color:#cf9a64 !important; }
+/* 좌석(성별) 라벨 — 다크에서 더 밝은 좌석색으로 */
+.slot-label.male{ color:var(--mt-seat-lead) !important; }
+.slot-label.female{ color:var(--mt-seat-supp) !important; }
+/* 관리자 토글 버튼(아이콘 #8a7050) */
+.admin-toggle-btn{ color:var(--mt-brass-lt) !important; border-color:var(--mt-brass) !important; background:#1e1614 !important; }
+.admin-toggle-btn.admin-active{ color:#16100f !important; background:var(--mt-sheen) !important; }
+/* 옅은 보조 텍스트들 톤 통일(읽히게) */
+.no-member, .no-scores, .no-reviews, .mg-empty, .talk-time, .rv-time,
+.del-talk, .rv-del, .mg-review, .mg-diff, .mg-date, .member-count,
+.member-exp, .absent-names, .absent-label, .empty, .loading,
+.link-taken-badge, .link-note, .finder-total-hint, .finder-step-unit{ color:var(--mt-bone-faint) !important; }
+/* 마이페이지(분장실) 텍스트·라벨 */
+.cfile-name, .cfile-rank, .cfile-sec-title, .pedit-title, .pedit-label{ color:var(--mt-bone) !important; }
+.cfile-label-stamp, .cfile-number, .cfile-arrow, .cfile-sec-cnt, .pedit-hint{ color:var(--mt-brass-lt) !important; }
+/* 네이티브 옵션 목록(select 펼침) 다크 */
+option{ background:#1e1614; color:var(--mt-bone); }
+
+/* ── 14. 남은 흰 패널/필드/트랙 다크화 ── */
+.slot-box, .quest-note, .score-cell, .member-field, .rf-input{ background:var(--mt-ink-2) !important; }
+.slot-box{ box-shadow:none !important; border-color:var(--border) !important; }
+.quest-note{ border-left-color:var(--mt-brass) !important; color:var(--mt-bone) !important; }
+.slot-track, .sbar-track, .lv-bar-wrap{ background:rgba(236,228,212,.12) !important; }
+.talk-avatar{ background:radial-gradient(circle at 38% 30%,#2c1f1d,#160f0e) !important; color:var(--mt-brass-lt) !important; border-color:var(--mt-brass) !important; }
+.ended-notice{ background:var(--mt-ink-1) !important; }
+.member-card-btn:hover, .member-card-btn.active-member{ background:rgba(217,184,120,.08) !important; color:var(--mt-brass-lt) !important; }
+.star-btn.active, .star-btn:hover{ background:rgba(217,184,120,.14) !important; color:var(--mt-brass-lt) !important; }
+.rf-input, .rf-input:focus, .score-cell input{ color:var(--mt-bone) !important; }
+.ac-item{ border-bottom-color:rgba(217,184,120,.12) !important; }
+.role-select-title{ color:var(--mt-bone-faint) !important; }
+.slot-full-badge{ color:var(--mt-brass-lt) !important; border-color:var(--mt-brass) !important; }
+.gender-label, .slot-count, .mstat-label, .rf-label, .rv-text, .talk-text{ color:var(--mt-bone-dim, #b8ae98) !important; }
 
 /* ── (선택) 폰트를 Cormorant로 전면 교체하려면, style.css에서
    'Cinzel'  →  'Cormorant' 로 일괄 치환하세요. 기본값(Cinzel)도
