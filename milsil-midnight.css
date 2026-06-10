@@ -183,6 +183,24 @@ option{ background:#1e1614; color:var(--mt-bone); }
 .role-persona{ color:#a855f7 !important; }
 .role-badge.role-persona{ border-color:rgba(168,85,247,.35) !important; background:rgba(168,85,247,.10) !important; }
 
+/* ── 16. 미연결 회원 배너 (관리자 전용 — style.css에서 #fffbeb 하드코딩됨) ── */
+.unlinked-banner{
+  background:rgba(217,184,120,.08) !important;
+  border-bottom-color:rgba(217,184,120,.30) !important;
+  border-top-color:rgba(217,184,120,.15) !important;
+}
+.unlinked-banner-icon{ color:var(--mt-brass-lt) !important; }
+.unlinked-banner-text{ color:var(--mt-bone-faint) !important; }
+.unlinked-banner-text strong{ color:var(--mt-brass-lt) !important; }
+.unlinked-banner-names{ color:var(--mt-bone-faint) !important; }
+.unlinked-banner-close{
+  border-color:var(--border) !important; color:var(--mt-bone-faint) !important;
+}
+.unlinked-banner-close:hover{
+  background:rgba(217,184,120,.10) !important;
+  border-color:var(--mt-brass) !important; color:var(--mt-brass-lt) !important;
+}
+
 /* ── (선택) 폰트를 Cormorant로 전면 교체하려면, style.css에서
    'Cinzel'  →  'Cormorant' 로 일괄 치환하세요. 기본값(Cinzel)도
    다크 위에서 잘 어울리므로 폰트 교체는 선택사항입니다. ── */
