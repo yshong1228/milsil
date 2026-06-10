@@ -474,55 +474,98 @@
     }
   });
 
-  // ── 환경 감지 ──
+  // ── 환경 감지 (화이트리스트 방식) ──
+  // 블랙리스트(앱 이름 나열)는 대응 못 하는 앱이 항상 생긴다.
+  // 반대로 "Google OAuth가 실제 동작하는 브라우저"만 화이트리스트로 허용.
   var _ua=navigator.userAgent;
-  // Android WebView: '; wv)' 마커 또는 인앱브라우저 앱 식별자
-  // iOS WebView: AppleWebKit은 있지만 Safari/ 없음
-  var _isWebView=
-    /; wv\)/.test(_ua) ||
-    /KAKAOTALK|NAVER\(inapp|Line\/[0-9]|Instagram|FBAN|FBAV|NaverSearch|DaumApps/.test(_ua) ||
-    (/iPhone|iPad/.test(_ua) && /AppleWebKit/.test(_ua) && !/Safari\//.test(_ua));
+  var _isAndroid=/Android/i.test(_ua);
+  var _isIOS=/iPhone|iPad|iPod/i.test(_ua);
+  var _isMobilePlatform=_isAndroid||_isIOS;
 
-  // ── 인앱브라우저 안내 (Chrome/Safari에서 열도록) ──
+  // Google OAuth가 작동하는 모바일 브라우저 화이트리스트
+  var _isSafeBrowser=(function(){
+    if(!_isMobilePlatform) return true; // 데스크탑은 모두 허용
+    var isChromeMobile =  /Chrome\/\d/.test(_ua) && !/; wv\)/.test(_ua);
+    var isSafariiOS    =  _isIOS && /Safari\/\d/.test(_ua) && /Version\/\d/.test(_ua);
+    var isSamsungInt   =  /SamsungBrowser\/\d/.test(_ua);
+    var isFirefoxMob   =  /Firefox\/\d/.test(_ua);
+    var isEdgeMob      =  /EdgA\/\d/.test(_ua);
+    var isNaverApp     =  /NAVER\(inapp/.test(_ua); // 네이버 앱 내부 브라우저는 제외
+    if(isNaverApp) return false;
+    return isChromeMobile||isSafariiOS||isSamsungInt||isFirefoxMob||isEdgeMob;
+  })();
+
+  // 모바일이면서 안전한 브라우저가 아닌 경우 = WebView / 인앱브라우저
+  var _isWebView=_isMobilePlatform&&!_isSafeBrowser;
+
+  // ── 인앱브라우저 안내 모달 ──
+  var _siteUrl='https://yshong1228.github.io/milsil/';
+
   function _showBrowserGuide(){
-    var existing=document.getElementById('webViewGuideModal');
+    var existing=document.getElementById('wvGuide');
     if(existing){ existing.style.display='flex'; return; }
 
-    // Android: intent URL로 Chrome 직접 실행 시도
-    var href=window.location.href;
-    var intentUrl='intent://'+href.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
-    var isAndroid=/Android/i.test(_ua);
+    // Android: intent URL (Chrome 직접 실행, fallback은 Play Store)
+    var intentUrl='intent://yshong1228.github.io/milsil/'
+      +'#Intent;scheme=https;package=com.android.chrome;'
+      +'S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.android.chrome;end';
 
-    var modal=document.createElement('div');
-    modal.id='webViewGuideModal';
-    modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:20px;';
-    modal.innerHTML=
-      '<div style="background:var(--parchment,#1e1614);border:1px solid var(--border,rgba(217,184,120,.3));border-radius:16px;padding:28px 24px;max-width:320px;width:100%;text-align:center;color:var(--ink,#ece4d4);font-family:sans-serif">'+
-        '<div style="font-size:36px;margin-bottom:14px">🌐</div>'+
-        '<div style="font-size:17px;font-weight:700;margin-bottom:10px">외부 브라우저에서 열어주세요</div>'+
-        '<div style="font-size:13px;line-height:1.7;color:var(--ink-dim,#b8ae98);margin-bottom:22px">'+
-          '카카오톡·인스타그램 등 앱 내 브라우저에서는<br>Google 로그인이 지원되지 않습니다.<br>Chrome 또는 Safari에서 접속해 주세요.'+
+    var openBtnHtml=_isAndroid
+      ? '<a href="'+intentUrl+'" id="wvChromBtn" style="display:block;background:#b8924a;color:#16100f;padding:13px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:700;margin-bottom:10px;letter-spacing:.3px">Chrome으로 열기</a>'
+      : '<div style="background:#1a1210;border:1px solid rgba(217,184,120,.25);border-radius:10px;padding:12px;margin-bottom:12px;word-break:break-all;font-size:12px;color:#b8ae98;user-select:all">'+_siteUrl+'</div>';
+
+    var d=document.createElement('div');
+    d.id='wvGuide';
+    d.style.cssText='position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:24px;';
+    d.innerHTML=
+      '<div style="background:#1e1614;border:1px solid rgba(217,184,120,.3);border-radius:18px;padding:30px 22px;max-width:310px;width:100%;text-align:center;font-family:\'Noto Sans KR\',sans-serif">'+
+        '<div style="font-size:40px;margin-bottom:16px">🌐</div>'+
+        '<div style="font-size:17px;font-weight:700;color:#ece4d4;margin-bottom:10px">'+
+          ((_isAndroid?'Chrome':'Safari')+' 에서 열어주세요')+
         '</div>'+
-        (isAndroid
-          ? '<a href="'+intentUrl+'" style="display:block;background:var(--gold,#b8924a);color:#16100f;padding:12px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700;margin-bottom:10px">Chrome으로 열기</a>'
-          : '')+
-        '<button onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+href+'\');this.textContent=\'복사됨 ✓\'" '+
-          'style="display:block;width:100%;background:none;border:1px solid var(--border,rgba(217,184,120,.3));color:var(--ink-dim,#b8ae98);padding:11px;border-radius:10px;cursor:pointer;font-size:13px;margin-bottom:8px">'+
+        '<div style="font-size:13px;line-height:1.75;color:#b8ae98;margin-bottom:22px">'+
+          '현재 앱 내 브라우저에서는<br>Google 로그인을 사용할 수 없습니다.<br>'+
+          (_isAndroid?'Chrome':'Safari')+' 에서 접속해 주시면<br>정상적으로 로그인됩니다.'+
+        '</div>'+
+        openBtnHtml+
+        '<button id="wvCopyBtn" style="display:block;width:100%;background:none;border:1px solid rgba(217,184,120,.28);color:#b8ae98;padding:12px;border-radius:10px;cursor:pointer;font-size:13px;margin-bottom:10px;">'+
           '주소 복사하기</button>'+
-        '<button onclick="document.getElementById(\'webViewGuideModal\').style.display=\'none\'" '+
-          'style="background:none;border:none;color:var(--ink-faint,#867c68);font-size:12px;cursor:pointer;padding:4px">닫기</button>'+
+        '<button onclick="document.getElementById(\'wvGuide\').style.display=\'none\'" '+
+          'style="background:none;border:none;color:#5a5040;font-size:12px;cursor:pointer;padding:6px;">닫기</button>'+
       '</div>';
-    document.body.appendChild(modal);
+    document.body.appendChild(d);
+
+    // 복사 버튼
+    document.getElementById('wvCopyBtn').addEventListener('click',function(){
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(_siteUrl).then(function(){
+          document.getElementById('wvCopyBtn').textContent='복사됨 ✓';
+        });
+      }else{
+        // clipboard API 없는 구형 WebView 대응
+        var ta=document.createElement('textarea');
+        ta.value=_siteUrl; ta.style.cssText='position:fixed;opacity:0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        document.getElementById('wvCopyBtn').textContent='복사됨 ✓';
+      }
+    });
+  }
+
+  // 인앱브라우저로 접속했다면 페이지 로드 시점에 즉시 안내
+  // (로그인 버튼을 누르기 전에 미리 알려줌)
+  if(_isWebView){
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',_showBrowserGuide);
+    }else{
+      _showBrowserGuide();
+    }
   }
 
   // ── Google 로그인 ──
-  // signInWithRedirect는 WebView에서 Google의 disallowed_useragent(403)를 유발.
-  // 모든 환경에서 signInWithPopup 사용. WebView는 사전 차단 후 안내.
   window.signInWithGoogle=function(){
-    if(_isWebView){
-      _showBrowserGuide();
-      return;
-    }
+    if(_isWebView){ _showBrowserGuide(); return; }
 
     var provider=new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({hl:'ko'});
