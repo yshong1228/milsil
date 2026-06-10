@@ -169,7 +169,17 @@ option{ background:#1e1614; color:var(--mt-bone); }
 .slot-full-badge{ color:var(--mt-brass-lt) !important; border-color:var(--mt-brass) !important; }
 .gender-label, .slot-count, .mstat-label, .rf-label, .rv-text, .talk-text{ color:var(--mt-bone-dim, #b8ae98) !important; }
 
-/* ── 15. 페르소나 칭호 — 파란색 → 보라색 ── */
+/* ── 15. 칭호·이름 색상 (다크 테마용 밝은 톤) ── */
+/* 수사관: 하늘색 */
+.role-detective{ color:#7dd3fc !important; }
+.role-badge.role-detective{ border-color:rgba(125,211,252,.35) !important; background:rgba(125,211,252,.10) !important; }
+/* 명탐정: 파란색 */
+.role-genius{ color:#60a5fa !important; }
+.role-badge.role-genius{ border-color:rgba(96,165,250,.35) !important; background:rgba(96,165,250,.10) !important; }
+/* 연기자: 핑크색 */
+.role-actor{ color:#f472b6 !important; }
+.role-badge.role-actor{ border-color:rgba(244,114,182,.35) !important; background:rgba(244,114,182,.10) !important; }
+/* 페르소나: 보라색 */
 .role-persona{ color:#a855f7 !important; }
 .role-badge.role-persona{ border-color:rgba(168,85,247,.35) !important; background:rgba(168,85,247,.10) !important; }
 
