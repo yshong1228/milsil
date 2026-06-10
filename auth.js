@@ -27,6 +27,26 @@
     return;
   }
 
+  // ── 모바일 sessionStorage 파티션 대응 ──
+  // Firebase compat SDK는 초기화 시 내부적으로 getRedirectResult()를 호출한다.
+  // 모바일 브라우저(iOS Safari ITP, Android WebView)는 OAuth redirect 후
+  // sessionStorage 파티션이 달라져 "missing initial state" 에러가 발생한다.
+  // 명시적으로 먼저 처리해 unhandled rejection을 막는다.
+  auth.getRedirectResult().then(function(result){
+    // redirect 로그인 완료 시 onAuthStateChanged가 자동으로 처리
+    if(result && result.user) console.log('[Auth] 리다이렉트 로그인 완료');
+  }).catch(function(err){
+    var isMissingState = err.message && err.message.indexOf('initial state') !== -1;
+    if(err.code==='auth/internal-error' ||
+       err.code==='auth/web-storage-unsupported' ||
+       isMissingState){
+      // 모바일 스토리지 파티션 문제 — 팝업 기반 앱에서는 무시해도 안전
+      console.warn('[Auth] 리다이렉트 상태 확인 실패 (모바일/파티션):', err.code);
+      return;
+    }
+    console.error('[Auth] getRedirectResult 에러:', err);
+  });
+
   // ── 헤더 프로필 업데이트 ──
   function updateHeaderProfile(user, memberName){
     var profile=document.getElementById('userProfile');
@@ -455,15 +475,31 @@
   });
 
   // ── Google 로그인 ──
+  // 모바일: signInWithRedirect (팝업은 iOS/Android에서 신뢰할 수 없음)
+  // 데스크톱: signInWithPopup, 팝업 차단 시 redirect 폴백
+  var _isMobile=/Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent);
+
   window.signInWithGoogle=function(){
     var provider=new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({hl:'ko'});
+
+    if(_isMobile){
+      auth.signInWithRedirect(provider).catch(function(err){
+        console.error('[Auth] Redirect 로그인 실패:',err);
+        if(typeof showToast==='function') showToast('로그인에 실패했습니다. 다시 시도해주세요.');
+      });
+      return;
+    }
+
     auth.signInWithPopup(provider).catch(function(err){
       console.error('[Auth] Google 로그인 실패:',err);
       var msg;
       switch(err.code){
         case 'auth/popup-closed-by-user': msg='로그인이 취소되었습니다';break;
-        case 'auth/popup-blocked': msg='팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요';break;
+        case 'auth/popup-blocked':
+          // 팝업 차단 → redirect 폴백
+          auth.signInWithRedirect(provider).catch(function(){});
+          return;
         case 'auth/network-request-failed': msg='네트워크 오류가 발생했습니다';break;
         default: msg='로그인에 실패했습니다';
       }
