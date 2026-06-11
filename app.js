@@ -1984,9 +1984,9 @@ function renderMemberDetail(){
     :rvs.map(function(rv){
         var sc=scoreNumber(rv.score);
         var scColor=sc!==null?(sc>=9?'#4ade80':sc>=8?'#86efac':sc>=7?'#f59e0b':sc>=5?'#f97316':'#ef4444'):'#8a7050';
-        var delBtn=isAdminUnlocked?(rv.isStatic
+        var delBtn=rv.isStatic
           ?'<button class="rv-del" data-del-legacy="'+esc(rv.gameName)+'||'+esc(rv.memberName)+'">삭제</button>'
-          :'<button class="rv-del" data-rvid="'+rv.id+'">삭제</button>'):'';
+          :'<button class="rv-del" data-rvid="'+rv.id+'">삭제</button>';
         return '<div class="member-game-row">'
           +'<div class="mg-score" style="color:'+scColor+'">'+(sc!==null?sc.toFixed(1):'-')+'</div>'
           +'<div class="mg-info"><div class="mg-name">'+escR(rv.gameName)+'</div>'
