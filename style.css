@@ -1141,6 +1141,12 @@ button:active:not(:disabled){transform:scale(0.95);filter:brightness(0.93)}
 }
 .slot-box.slot-open{animation:slotPulse 2.6s ease-in-out infinite}
 
+/* ── 퀘스트 상세 stagger 페이드인 ── */
+.quest-card.just-opened .detail-body>*{animation:rvFade .2s ease-out both}
+.quest-card.just-opened .detail-body>*:nth-child(2){animation-delay:.05s}
+.quest-card.just-opened .detail-body>*:nth-child(3){animation-delay:.1s}
+.quest-card.just-opened .detail-body>*:nth-child(n+4){animation-delay:.14s}
+
 /* ── 회원 상세 슬라이드인 ── */
 @keyframes memberReveal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 .member-detail.open{animation:memberReveal .28s cubic-bezier(0.2,0,0,1) forwards}
