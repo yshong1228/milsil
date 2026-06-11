@@ -1542,6 +1542,8 @@ document.addEventListener('click',function(e){
     activeMemName='';
     renderMemberGrid();
     document.getElementById('memberDetail').classList.remove('open');
+    var fc=document.getElementById('memberDetailCloseFixed');
+    if(fc)fc.style.display='none';
     return;
   }
 });
@@ -2011,11 +2013,10 @@ function renderMemberDetail(){
           +'</div>';
       }).join('');
 
+  var fixedClose=document.getElementById('memberDetailCloseFixed');
+  if(fixedClose)fixedClose.style.display='block';
   det.innerHTML=
-    '<div style="position:sticky;top:0;z-index:20;display:flex;justify-content:flex-end;padding:2px 0 6px;background:#faf7f0">'
-    +'<button class="f-act member-detail-close" style="padding:4px 14px;font-size:11px">✕ 닫기</button>'
-    +'</div>'
-    +'<div class="member-detail-header">'
+    '<div class="member-detail-header">'
     +(function(){
       var av=window.AVATAR_MAP&&window.AVATAR_MAP[m];
       var style=roleColor?'border-color:'+roleColor+';background:linear-gradient(135deg,'+roleColor+'30,'+roleColor+'10)':'';
