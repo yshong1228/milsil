@@ -657,6 +657,42 @@
       var orig=el.textContent.trim();
       if(nickMap[orig]) el.textContent=nickMap[orig];
     });
+
+    // 리뷰 아이템 소형 아바타 패치 (rv-header 내 data-mname-av 속성 기준)
+    document.querySelectorAll('.rv-header [data-mname-av]').forEach(function(el){
+      var mname=el.getAttribute('data-mname-av');
+      var avData=avMap[mname];
+      if(!avData||el.getAttribute('data-av-set')) return;
+      if(avData.type==='google'&&avData.url){
+        el.innerHTML='<img src="'+avData.url+'" loading="lazy" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block">';
+      }else if(avData.type==='emoji'){
+        el.textContent=avData.emoji;
+        el.style.fontSize=Math.round(el.offsetWidth*.56)+'px';
+      }
+      el.setAttribute('data-av-set','1');
+    });
+
+    // 열려있는 회원 상세 패널 아바타 패치
+    var det=document.getElementById('memberDetail');
+    if(det&&det.classList.contains('open')){
+      var lgAv=det.querySelector('.member-avatar-lg');
+      if(lgAv&&!lgAv.getAttribute('data-av-set')){
+        var dmname=lgAv.getAttribute('data-mname-av');
+        if(!dmname){
+          var nameEl=det.querySelector('[style*="font-size:18px"]');
+          if(nameEl) dmname=(nameEl.textContent||'').trim();
+        }
+        var avd=dmname&&avMap[dmname];
+        if(avd){
+          if(avd.type==='google'&&avd.url){
+            lgAv.innerHTML='<img src="'+avd.url+'" loading="lazy" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block">';
+          }else if(avd.type==='emoji'){
+            lgAv.innerHTML='<span style="font-size:26px;line-height:1">'+avd.emoji+'</span>';
+          }
+          lgAv.setAttribute('data-av-set','1');
+        }
+      }
+    }
   }
 
   // 옵저버 통합 설치 — 페이지당 1개, 역할별로 분리
