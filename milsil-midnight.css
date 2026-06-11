@@ -1,4 +1,4 @@
-/* ════════════════════════════════════════════════════════════════
+﻿/* ════════════════════════════════════════════════════════════════
    심야 극장 — MIDNIGHT THEATER 다크 테마 패치
    for yshong1228/milsil (바닐라 JS 앱)
 
@@ -53,7 +53,7 @@ body{
 body::before{ background:none !important; }
 
 /* ── 3. 카드/패널 그라운드 (하드코딩된 #faf7f0 / #fff 류) ── */
-.form-scroll, .rec-form-card, .quest-card, .game-card, .stat-box,
+.form-scroll, .rec-form-card, .stat-box,
 .member-card-btn, .member-detail, .pw-modal, .link-modal,
 .finder-unknown-header, .finder-game-row, .role-select-panel,
 .cfile-wrap, .cfile-header, .cfile-section, .cfile-sec-body,
@@ -62,6 +62,12 @@ body::before{ background:none !important; }
   background:linear-gradient(155deg,#211917,#16100f) !important;
   border-color:var(--border) !important;
   box-shadow:0 14px 36px rgba(0,0,0,.5) !important;
+}
+/* quest-card / game-card: background!important 유지, box-shadow는 animation 우선 허용 */
+.quest-card, .game-card{
+  background:linear-gradient(155deg,#211917,#16100f) !important;
+  border-color:var(--border) !important;
+  box-shadow:0 14px 36px rgba(0,0,0,.5);
 }
 .quest-card.past-card, .game-card.past-card{ background:linear-gradient(155deg,#191312,#120d0c) !important; }
 /* 종이 괘선 텍스처 → 그레인 */
@@ -156,7 +162,8 @@ option{ background:#1e1614; color:var(--mt-bone); }
 
 /* ── 14. 남은 흰 패널/필드/트랙 다크화 ── */
 .slot-box, .quest-note, .score-cell, .member-field, .rf-input{ background:var(--mt-ink-2) !important; }
-.slot-box{ box-shadow:none !important; border-color:var(--border) !important; }
+.slot-box{ border-color:var(--border) !important; }
+.slot-box:not(.slot-open){ box-shadow:none !important; }
 .quest-note{ border-left-color:var(--mt-brass) !important; color:var(--mt-bone) !important; }
 .slot-track, .sbar-track, .lv-bar-wrap{ background:rgba(236,228,212,.12) !important; }
 .talk-avatar{ background:radial-gradient(circle at 38% 30%,#2c1f1d,#160f0e) !important; color:var(--mt-brass-lt) !important; border-color:var(--mt-brass) !important; }
