@@ -2012,7 +2012,10 @@ function renderMemberDetail(){
       }).join('');
 
   det.innerHTML=
-    '<div class="member-detail-header">'
+    '<div style="position:sticky;top:0;z-index:20;display:flex;justify-content:flex-end;padding:2px 0 6px;background:#faf7f0">'
+    +'<button class="f-act member-detail-close" style="padding:4px 14px;font-size:11px">✕ 닫기</button>'
+    +'</div>'
+    +'<div class="member-detail-header">'
     +(function(){
       var av=window.AVATAR_MAP&&window.AVATAR_MAP[m];
       var style=roleColor?'border-color:'+roleColor+';background:linear-gradient(135deg,'+roleColor+'30,'+roleColor+'10)':'';
@@ -2035,11 +2038,11 @@ function renderMemberDetail(){
     +'<div class="mstat"><div class="mstat-val">'+s.exp+'</div><div class="mstat-label">EXP</div></div>'
     +(s.reviewCount?'<div class="mstat"><div class="mstat-val">'+s.reviewCount+'</div><div class="mstat-label">리뷰 수</div></div>':'')
     +'</div></div>'
-    +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">'
-    +'<button class="f-act member-detail-close">닫기</button>'
+    +(isAdminUnlocked||roles.length?'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">'
     +(isAdminUnlocked?'<button class="f-act danger" data-remove-member="'+m+'">✕ 삭제</button>':'')
     +'<button class="assign-role-btn" data-toggle-panel="'+m+'">✦ 역할 부여</button>'
-    +'</div></div>'
+    +'</div>':'')
+    +'</div>'
     +'<div class="role-select-panel" id="rp_'+m+'">'
     +'<div class="role-select-title">역할 선택</div>'
     +'<div class="role-btns">'+roleBtns+'<button class="role-assign-btn none-btn" data-assign-member="'+m+'" data-assign-role="">모두 해제</button></div>'
