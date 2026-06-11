@@ -1,4 +1,4 @@
-
+﻿
 var GAMES = typeof _GAMES_DATA !== 'undefined' ? _GAMES_DATA : [];
 var openRecs = new Set();
 var IS_FILE_PROTOCOL = window.location.protocol === 'file:';
@@ -284,6 +284,19 @@ if(USING_LOCAL_DB){
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function getMemberAvatarHTML(mname,size){
+  var s=size||24;
+  var av=window.AVATAR_MAP&&window.AVATAR_MAP[mname];
+  var radStyle='width:'+s+'px;height:'+s+'px;border-radius:50%;flex-shrink:0;';
+  var attr=' data-mname-av="'+esc(mname)+'"';
+  if(av){
+    if(av.type==='google'&&av.url)
+      return '<img src="'+esc(av.url)+'" loading="lazy" alt=""'+attr+' data-av-set="1" style="'+radStyle+'object-fit:cover;display:block" onerror="this.style.display=\'none\'">';
+    if(av.type==='emoji')
+      return '<span'+attr+' data-av-set="1" style="'+radStyle+'display:inline-flex;align-items:center;justify-content:center;font-size:'+Math.round(s*.56)+'px;background:rgba(184,146,74,.08);border:1px solid rgba(184,146,74,.2)">'+av.emoji+'</span>';
+  }
+  return '<span'+attr+' style="'+radStyle+'display:inline-flex;align-items:center;justify-content:center;font-size:'+Math.round(s*.46)+'px;background:rgba(184,146,74,.08);border:1px solid rgba(184,146,74,.2);color:var(--gold);font-family:Cinzel,serif">'+esc(mname.slice(0,1))+'</span>';
+}
 function todayStr(){
   var n=new Date();
   return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
@@ -1412,6 +1425,7 @@ function gameCardHTML(g,rank){
           +'<div class="rv-score" style="color:'+scColor+'">'+(sc!==null?sc.toFixed(1):'-')+'</div>'
           +'<div class="rv-body">'
           +'<div class="rv-header">'
+          +getMemberAvatarHTML(r.memberName,22)
           +'<span class="rv-name '+(rClass||'')+'" style="'+(rColor?'color:'+rColor:'')+'">'+escR(r.memberName)+'</span>'
           +(primaryRole?'<span class="role-badge '+rClass+'" style="font-size:8px;padding:0 5px">'+primaryRole+'</span>':'')
           +(r.diff?'<span class="rv-time">난이도 '+escR(r.diff)+'</span>':'')
@@ -1971,7 +1985,14 @@ function renderMemberDetail(){
 
   det.innerHTML=
     '<div class="member-detail-header">'
-    +'<div class="member-avatar-lg" style="'+(roleColor?'border-color:'+roleColor+';background:linear-gradient(135deg,'+roleColor+'30,'+roleColor+'10)':'')+'">'+m.slice(0,1)+'</div>'
+    +(function(){
+      var av=window.AVATAR_MAP&&window.AVATAR_MAP[m];
+      var style=roleColor?'border-color:'+roleColor+';background:linear-gradient(135deg,'+roleColor+'30,'+roleColor+'10)':'';
+      var inner=m.slice(0,1);
+      if(av&&av.type==='google'&&av.url) inner='<img src="'+esc(av.url)+'" loading="lazy" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block">';
+      else if(av&&av.type==='emoji') inner='<span style="font-size:26px;line-height:1">'+av.emoji+'</span>';
+      return '<div class="member-avatar-lg" style="'+style+'">'+inner+'</div>';
+    })()
     +'<div style="flex:1;min-width:0">'
     +'<div style="font-family:Cinzel,serif;font-size:18px;font-weight:700;'+(roleColor?'color:'+roleColor:'color:var(--gold)')+'">'+m+'</div>'
     +(roles.length?'<div style="margin-top:4px">'+getRoleBadgesHTML(roles)+'</div>':'')
