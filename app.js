@@ -316,8 +316,18 @@ function setFilter(f){
   render();
 }
 function toggleCard(id){
-  if(openCards.has(id))openCards.delete(id);else openCards.add(id);
-  render();
+  var card=document.getElementById('card_'+id);
+  if(!card)return;
+  if(card.classList.contains('open-card')){
+    card.classList.remove('open-card');
+    card.classList.remove('just-opened');
+    openCards.delete(id);
+  }else{
+    card.classList.add('open-card');
+    card.classList.add('just-opened');
+    openCards.add(id);
+    setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
+  }
 }
 
 function toggleForm(){
