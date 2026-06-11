@@ -1,4 +1,4 @@
-:root{
+﻿:root{
   --gold:#8b6914;
   --gold-light:#c8a84b;
   --gold-dark:#5a4008;
@@ -250,9 +250,9 @@ body::after{display:none}
 .past-card .chevron-rune{color:#c0b090}
 
 /* ── 펼쳐진 상세 ── */
-.quest-detail{display:none;border-top:1px solid var(--border)}
-.open-card .quest-detail{display:block}
-.detail-body{padding:16px 20px}
+.quest-detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s cubic-bezier(0.4,0,0.2,1);border-top:1px solid var(--border)}
+.open-card .quest-detail{grid-template-rows:1fr}
+.detail-body{overflow:hidden;padding:16px 20px}
 .quest-note{
   background:#fff;border:1px solid var(--border);border-left:3px solid var(--gold);
   border-radius:0 2px 2px 0;padding:10px 14px;font-size:13px;color:var(--ink-dim);
@@ -383,9 +383,9 @@ body::after{display:none}
 .parti-count{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.3px;background:#f5f0e8;border:1px solid var(--border);border-radius:1px;padding:3px 8px;color:var(--ink-dim);white-space:nowrap}
 
 /* 게임 상세 */
-.game-detail{display:none;border-top:1px solid var(--border)}
-.open-rec .game-detail{display:block}
-.game-detail-inner{padding:14px 16px}
+.game-detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s cubic-bezier(0.4,0,0.2,1);border-top:1px solid var(--border)}
+.open-rec .game-detail{grid-template-rows:1fr}
+.game-detail-inner{overflow:hidden;padding:14px 16px}
 .score-bar-section{margin-bottom:14px}
 .sbar-label{font-family:'Cinzel',serif;font-size:11px;color:var(--gold-dark);font-weight:700;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .sbar-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border-dark),transparent)}
@@ -1089,3 +1089,74 @@ body::after{display:none}
   border-color:rgba(180,148,60,0.5) !important;
   color:var(--ink-dim) !important;
 }
+
+/* ══════════════════════════════════════
+   인터랙션 & 애니메이션
+══════════════════════════════════════ */
+
+/* ── 버튼 피드백 ── */
+button:not(:disabled){transition:transform .12s ease,filter .12s ease,box-shadow .15s ease}
+button:active:not(:disabled){transform:scale(0.95);filter:brightness(0.93)}
+.post-btn{transition:background .2s,box-shadow .2s,transform .12s,filter .12s}
+.post-btn:active{transform:scale(0.96)}
+.f-act{transition:background .15s,color .15s,box-shadow .15s,transform .12s,filter .12s}
+.f-act:hover:not(.danger){box-shadow:0 2px 10px rgba(0,0,0,0.18);filter:brightness(1.06)}
+.f-act:active{transform:scale(0.94);filter:brightness(0.88)}
+.ms-btn{transition:background .15s,color .15s,transform .12s}
+.ms-btn:active{transform:scale(0.93)}
+.rf-submit{transition:background .15s,box-shadow .15s,transform .12s,filter .12s}
+.rf-submit:hover{filter:brightness(1.1);box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+.rf-submit:active{transform:scale(0.94)}
+.join-btn-m,.join-btn-f{transition:background .15s,transform .12s,filter .12s}
+.join-btn-m:active,.join-btn-f:active{transform:scale(0.93)}
+.rec-add-btn{transition:background .15s,box-shadow .15s,transform .12s,filter .12s}
+.rec-add-btn:active{transform:scale(0.95)}
+
+/* ── 리플 효과 ── */
+@keyframes rippleOut{from{transform:scale(0);opacity:.7}to{transform:scale(1);opacity:0}}
+
+/* ── 게임카드 chevron 회전 ── */
+.game-summary .chevron-rune{transition:transform .32s ease,color .2s}
+.open-rec .game-summary .chevron-rune{transform:rotate(180deg);color:var(--gold-dark)}
+
+/* ── 리뷰 stagger 페이드인 ── */
+@keyframes rvFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.just-opened .review-item{animation:rvFade .22s ease-out both}
+.just-opened .review-item:nth-child(2){animation-delay:.05s}
+.just-opened .review-item:nth-child(3){animation-delay:.10s}
+.just-opened .review-item:nth-child(4){animation-delay:.15s}
+.just-opened .review-item:nth-child(n+5){animation-delay:.18s}
+
+/* ── 파티모집 미완성 카드 glow ── */
+@keyframes questGlow{
+  0%,100%{box-shadow:1px 2px 0 rgba(160,144,112,0.25),0 2px 8px rgba(0,0,0,0.06)}
+  50%{box-shadow:1px 2px 0 rgba(160,144,112,0.25),0 6px 20px rgba(200,168,75,0.2),0 0 0 1px rgba(200,168,75,0.14)}
+}
+.quest-card:not(.past-card):not(.full-card){animation:questGlow 3.2s ease-in-out infinite}
+.quest-card:not(.past-card):not(.full-card):hover{animation:none}
+
+/* ── 빈 슬롯 pulse (milsil-midnight box-shadow:none 덮어쓰기) ── */
+@keyframes slotPulse{
+  0%,100%{box-shadow:1px 1px 0 rgba(160,144,112,0.2) !important}
+  50%{box-shadow:1px 1px 0 rgba(160,144,112,0.2),0 0 14px rgba(200,168,75,0.35),inset 0 0 8px rgba(200,168,75,0.08) !important}
+}
+.slot-box.slot-open{animation:slotPulse 2.6s ease-in-out infinite}
+
+/* ── 회원 상세 슬라이드인 ── */
+@keyframes memberReveal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.member-detail.open{animation:memberReveal .28s cubic-bezier(0.2,0,0,1) forwards}
+
+/* ── 탭 전환 페이드인 ── */
+@keyframes pageFadeIn{from{opacity:0}to{opacity:1}}
+.page-fade-in{animation:pageFadeIn .2s ease-out forwards}
+
+/* ── 카드 hover lift ── */
+.game-card{transition:border-color .2s,box-shadow .2s,transform .18s}
+.game-card:hover{transform:translateY(-1px)}
+.quest-card{transition:border-color .2s,box-shadow .2s,transform .18s}
+.quest-card:hover:not(.past-card){transform:translateY(-1px);animation:none}
+
+/* ── 회원 카드 hover lift ── */
+.member-card-btn{transition:background .15s,box-shadow .15s,transform .15s}
+.member-card-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.member-card-btn:active{transform:scale(0.97)}
