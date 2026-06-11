@@ -250,9 +250,9 @@ body::after{display:none}
 .past-card .chevron-rune{color:#c0b090}
 
 /* ── 펼쳐진 상세 ── */
-.quest-detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s cubic-bezier(0.4,0,0.2,1);border-top:1px solid var(--border)}
-.open-card .quest-detail{grid-template-rows:1fr}
-.detail-body{overflow:hidden;padding:16px 20px}
+.quest-detail{max-height:0;overflow:hidden;transition:max-height .42s cubic-bezier(0.4,0,0.2,1);border-top:1px solid var(--border)}
+.open-card .quest-detail{max-height:5000px}
+.detail-body{padding:16px 20px}
 .quest-note{
   background:#fff;border:1px solid var(--border);border-left:3px solid var(--gold);
   border-radius:0 2px 2px 0;padding:10px 14px;font-size:13px;color:var(--ink-dim);
@@ -383,9 +383,8 @@ body::after{display:none}
 .parti-count{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.3px;background:#f5f0e8;border:1px solid var(--border);border-radius:1px;padding:3px 8px;color:var(--ink-dim);white-space:nowrap}
 
 /* 게임 상세 */
-.game-detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s cubic-bezier(0.4,0,0.2,1);border-top:1px solid var(--border)}
-.open-rec .game-detail{grid-template-rows:1fr}
-.game-detail-inner{overflow:hidden;padding:14px 16px}
+.game-detail{max-height:0;overflow:hidden;transition:max-height .42s cubic-bezier(0.4,0,0.2,1);border-top:1px solid var(--border)}
+.open-rec .game-detail{max-height:5000px}
 .score-bar-section{margin-bottom:14px}
 .sbar-label{font-family:'Cinzel',serif;font-size:11px;color:var(--gold-dark);font-weight:700;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .sbar-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border-dark),transparent)}
@@ -1135,10 +1134,10 @@ button:active:not(:disabled){transform:scale(0.95);filter:brightness(0.93)}
 .quest-card:not(.past-card):not(.full-card){animation:questGlow 3.2s ease-in-out infinite}
 .quest-card:not(.past-card):not(.full-card):hover{animation:none}
 
-/* ── 빈 슬롯 pulse (milsil-midnight box-shadow:none 덮어쓰기) ── */
+/* ── 빈 슬롯 pulse ── */
 @keyframes slotPulse{
-  0%,100%{box-shadow:1px 1px 0 rgba(160,144,112,0.2) !important}
-  50%{box-shadow:1px 1px 0 rgba(160,144,112,0.2),0 0 14px rgba(200,168,75,0.35),inset 0 0 8px rgba(200,168,75,0.08) !important}
+  0%,100%{box-shadow:1px 1px 0 rgba(160,144,112,0.2)}
+  50%{box-shadow:1px 1px 0 rgba(160,144,112,0.2),0 0 14px rgba(200,168,75,0.35),inset 0 0 8px rgba(200,168,75,0.08)}
 }
 .slot-box.slot-open{animation:slotPulse 2.6s ease-in-out infinite}
 
