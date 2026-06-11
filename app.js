@@ -582,12 +582,12 @@ function cardHTML(ev){
     +(ev.note?'<div class="quest-note">'+esc(ev.note)+'</div>':'')
     +'<div class="slots-label">\ud30c\ud2f0 \uc2ac\ub86f</div>'
     +'<div class="slot-row">'
-    +'<div class="slot-box male-slot"><div class="slot-top"><span class="slot-label male">\u2694 \ub0a8\uc790</span>'+(mFull?'<span class="slot-full-badge">FULL</span>':'<span class="slot-count"><b>'+mP.length+'</b> / '+ev.male+'\uba85</span>')+'</div>'
+    +'<div class="slot-box male-slot'+(mFull||past?'':' slot-open')+'"><div class="slot-top"><span class="slot-label male">\u2694 \ub0a8\uc790</span>'+(mFull?'<span class="slot-full-badge">FULL</span>':'<span class="slot-count"><b>'+mP.length+'</b> / '+ev.male+'\uba85</span>')+'</div>'
     +'<div class="slot-track"><div class="slot-fill male'+(mFull?' maxed':'')+'" style="width:'+mPct+'%"></div></div>'
     +'<div class="party-chips">'+(mChips||noOne)+'</div>'
     +(past?'<div class="ended-notice">\u2694 \uc784\ubb34\uac00 \uc885\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4</div>':mFull?'<div class="ended-notice">\u2014 \uc2ac\ub86f \ub9c8\uac10 \u2014</div>':'<div class="join-field"><input type="text" id="jnm_'+ev.id+'" class="join-input" placeholder="\uc774\ub984 \uc785\ub825" onclick="event.stopPropagation()"><button class="join-btn-m" onclick="joinEvent(\''+ev.id+'\',\'male\',event)">\ucc38\uc5ec</button></div>')
     +'</div>'
-    +'<div class="slot-box female-slot"><div class="slot-top"><span class="slot-label female">\u2726 \uc5ec\uc790</span>'+(fFull?'<span class="slot-full-badge">FULL</span>':'<span class="slot-count"><b>'+fP.length+'</b> / '+ev.female+'\uba85</span>')+'</div>'
+    +'<div class="slot-box female-slot'+(fFull||past?'':' slot-open')+'"><div class="slot-top"><span class="slot-label female">\u2726 \uc5ec\uc790</span>'+(fFull?'<span class="slot-full-badge">FULL</span>':'<span class="slot-count"><b>'+fP.length+'</b> / '+ev.female+'\uba85</span>')+'</div>'
     +'<div class="slot-track"><div class="slot-fill female'+(fFull?' maxed':'')+'" style="width:'+fPct+'%"></div></div>'
     +'<div class="party-chips">'+(fChips||noOne)+'</div>'
     +(past?'<div class="ended-notice">\u2726 \uc784\ubb34\uac00 \uc885\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4</div>':fFull?'<div class="ended-notice">\u2014 \uc2ac\ub86f \ub9c8\uac10 \u2014</div>':'<div class="join-field"><input type="text" id="jnf_'+ev.id+'" class="join-input" placeholder="\uc774\ub984 \uc785\ub825" onclick="event.stopPropagation()"><button class="join-btn-f" onclick="joinEvent(\''+ev.id+'\',\'female\',event)">\ucc38\uc5ec</button></div>')
@@ -1213,19 +1213,12 @@ function switchTab(tab){
   document.getElementById('members-page').classList.toggle('active',tab==='members');
   var fg=document.getElementById('findgame-page');
   if(fg)fg.classList.toggle('active',tab==='findgame');
-  if(tab==='records'){
-    renderStats();
-    filterGames();
-  }
-  if(tab==='members'){
-    renderMemberGrid();
-    renderMemberDetail();
-  }
-  if(tab==='findgame'){
-    updateFinderTotalDisplay();
-    renderFinderChips();
-    renderFinderResults();
-  }
+  var pageMap={board:'board-page',records:'records-page',members:'members-page',findgame:'findgame-page'};
+  var activePage=document.getElementById(pageMap[tab]);
+  if(activePage){activePage.classList.remove('page-fade-in');void activePage.offsetWidth;activePage.classList.add('page-fade-in');}
+  if(tab==='records'){renderStats();filterGames();}
+  if(tab==='members'){renderMemberGrid();renderMemberDetail();}
+  if(tab==='findgame'){updateFinderTotalDisplay();renderFinderChips();renderFinderResults();}
 }
 
 function toggleRecForm(){
@@ -1486,8 +1479,14 @@ async function toggleSpoilerOnReview(checkbox,reviewId){
 function toggleRec(rank){
   var card=document.getElementById('rec_'+rank);
   if(!card)return;
-  if(card.classList.contains('open-rec'))card.classList.remove('open-rec');
-  else card.classList.add('open-rec');
+  if(card.classList.contains('open-rec')){
+    card.classList.remove('open-rec');
+    card.classList.remove('just-opened');
+  }else{
+    card.classList.add('open-rec');
+    card.classList.add('just-opened');
+    setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
+  }
 }
 
 document.addEventListener('keydown',function(e){
@@ -1499,6 +1498,19 @@ document.addEventListener('keydown',function(e){
   var rank=form.getAttribute('data-rank');
   var gname=form.getAttribute('data-gname');
   if(rank!==null&&gname)submitReview(gname,parseInt(rank,10),null);
+});
+document.addEventListener('mousedown',function(e){
+  var btn=e.target.closest('button');
+  if(!btn||btn.disabled)return;
+  if(btn.classList.contains('chip-x')||btn.classList.contains('rv-del'))return;
+  var r=document.createElement('span');
+  var rect=btn.getBoundingClientRect();
+  var sz=Math.max(rect.width,rect.height)*2;
+  r.style.cssText='position:absolute;border-radius:50%;pointer-events:none;background:rgba(200,168,75,0.22);width:'+sz+'px;height:'+sz+'px;left:'+(e.clientX-rect.left-sz/2)+'px;top:'+(e.clientY-rect.top-sz/2)+'px;animation:rippleOut .55s ease-out forwards;';
+  if(getComputedStyle(btn).position==='static')btn.style.position='relative';
+  btn.style.overflow='hidden';
+  btn.appendChild(r);
+  setTimeout(function(){r.remove();},600);
 });
 document.addEventListener('click',function(e){
   var sp=e.target.closest('.rv-spoiler-wrap');
