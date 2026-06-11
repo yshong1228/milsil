@@ -813,9 +813,13 @@ function getLiveReviewsByMember(){
 function getAllReviews(){
   if(_rc)return _rc;
   var legacy=(LEGACY_REVIEWS||[]).map(function(r){return prepareReview(r,false);});
-  var live=(firebaseReviews||[]).map(function(r){return prepareReview(r,true);});
+  var liveRaw=firebaseReviews||[];
+  var live=liveRaw.filter(function(r){return !r.deleted;}).map(function(r){return prepareReview(r,true);});
   var lk={};
   live.forEach(function(r){lk[reviewKey(r.gameName,r.memberName)]=true;});
+  liveRaw.filter(function(r){return!!r.deleted;}).forEach(function(r){
+    lk[reviewKey(r.gameName||'',canonicalMemberName(r.memberName||''))]=true;
+  });
   _rc=legacy.filter(function(r){return !lk[reviewKey(r.gameName,r.memberName)];}).concat(live);
   return _rc;
 }
@@ -1425,8 +1429,10 @@ function gameCardHTML(g,rank){
           +'<div class="rv-score" style="color:'+scColor+'">'+(sc!==null?sc.toFixed(1):'-')+'</div>'
           +'<div class="rv-body">'
           +'<div class="rv-header">'
+          +'<span data-mname="'+esc(r.memberName)+'" style="display:inline-flex;align-items:center;gap:5px;cursor:pointer">'
           +getMemberAvatarHTML(r.memberName,22)
           +'<span class="rv-name '+(rClass||'')+'" style="'+(rColor?'color:'+rColor:'')+'">'+escR(r.memberName)+'</span>'
+          +'</span>'
           +(primaryRole?'<span class="role-badge '+rClass+'" style="font-size:8px;padding:0 5px">'+primaryRole+'</span>':'')
           +(r.diff?'<span class="rv-time">난이도 '+escR(r.diff)+'</span>':'')
           +(r.createdAt?'<span class="rv-time">'+stampToLabel(r.createdAt)+'</span>':'')
@@ -1499,6 +1505,12 @@ document.addEventListener('click',function(e){
   if(sp){sp.classList.toggle('revealed');return;}
   var delBtn=e.target.closest('[data-rvid]');
   if(delBtn){deleteReview(delBtn.getAttribute('data-rvid'),e);return;}
+  var delLegacyBtn=e.target.closest('[data-del-legacy]');
+  if(delLegacyBtn){
+    var parts=delLegacyBtn.getAttribute('data-del-legacy').split('||');
+    deleteLegacyReview(parts[0],parts[1]);
+    return;
+  }
   var roleBtn=e.target.closest('[data-assign-member]');
   if(roleBtn){
     var rm=roleBtn.getAttribute('data-assign-member');
@@ -1595,7 +1607,20 @@ async function submitReview(gameName,rank,e){
 async function deleteReview(id,e){
   if(e)e.stopPropagation();
   if(!confirm('리뷰를 삭제하시겠습니까?'))return;
-  await reviewsCol.doc(id).delete();
+  var rv=(firebaseReviews||[]).find(function(r){return r.id===id;});
+  var hasLegacy=rv&&(LEGACY_REVIEWS||[]).some(function(r){
+    return r.gameName===rv.gameName&&canonicalMemberName(r.memberName)===canonicalMemberName(rv.memberName);
+  });
+  if(hasLegacy){
+    await reviewsCol.doc(id).update({deleted:true});
+  }else{
+    await reviewsCol.doc(id).delete();
+  }
+  showToast('리뷰가 삭제되었습니다');
+}
+async function deleteLegacyReview(gameName,memberName){
+  if(!confirm('리뷰를 삭제하시겠습니까?'))return;
+  await reviewsCol.add({gameName:gameName,memberName:memberName,deleted:true});
   showToast('리뷰가 삭제되었습니다');
 }
 
@@ -1918,8 +1943,7 @@ function renderMemberGrid(){
 }
 function showMember(name){
   activeMemName=canonicalMemberName(name);
-  renderMemberGrid();
-  renderMemberDetail();
+  switchTab('members');
 }
 function renderMemberDetail(){
   var det=document.getElementById('memberDetail');
@@ -1960,6 +1984,9 @@ function renderMemberDetail(){
     :rvs.map(function(rv){
         var sc=scoreNumber(rv.score);
         var scColor=sc!==null?(sc>=9?'#4ade80':sc>=8?'#86efac':sc>=7?'#f59e0b':sc>=5?'#f97316':'#ef4444'):'#8a7050';
+        var delBtn=rv.isStatic
+          ?'<button class="rv-del" data-del-legacy="'+esc(rv.gameName)+'||'+esc(rv.memberName)+'">삭제</button>'
+          :'<button class="rv-del" data-rvid="'+rv.id+'">삭제</button>';
         return '<div class="member-game-row">'
           +'<div class="mg-score" style="color:'+scColor+'">'+(sc!==null?sc.toFixed(1):'-')+'</div>'
           +'<div class="mg-info"><div class="mg-name">'+escR(rv.gameName)+'</div>'
@@ -1969,6 +1996,7 @@ function renderMemberDetail(){
               :'<div class="mg-review">'+escR(rv.review)+'</div>'):'')
           +'</div>'
           +(rv.createdAt?'<div class="mg-date">'+stampToLabel(rv.createdAt)+'</div>':'')
+          +delBtn
           +'</div>';
       }).join('');
 
