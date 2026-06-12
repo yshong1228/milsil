@@ -214,6 +214,31 @@
     });
   };
 
+  // ── 관리자 연동 해제 ──
+  // Firebase Auth 계정을 삭제해도 members 문서의 uid는 남아 해당 이름이
+  // 영구히 "연결됨"으로 잠긴다. 관리자가 이 함수로 uid를 비워 재등록을 허용한다.
+  // 사용: 관리자로 로그인 후 콘솔에서  unlinkMember('다은')
+  window.unlinkMember=function(memberName){
+    if(ADMIN_MEMBERS.indexOf(window.currentLinkedMember)<0){
+      console.warn('[Auth] 연동 해제는 관리자만 가능합니다');
+      if(typeof showToast==='function') showToast('관리자만 연동 해제할 수 있습니다');
+      return Promise.reject('forbidden');
+    }
+    if(!memberName){ return Promise.reject('이름 없음'); }
+    return db.collection('members').doc(memberName).update({
+      uid: firebase.firestore.FieldValue.delete(),
+      email: firebase.firestore.FieldValue.delete()
+    }).then(function(){
+      console.log('[Auth] '+memberName+' 연동 해제 완료 — 재등록 가능');
+      if(typeof showToast==='function') showToast('✦ '+memberName+' 연동 해제 완료 — 재등록 가능');
+      checkUnlinkedMembers();
+    }).catch(function(e){
+      console.error('[Auth] 연동 해제 실패:',e);
+      if(typeof showToast==='function') showToast('연동 해제 실패: '+(e&&e.message||e));
+      throw e;
+    });
+  };
+
   // ── 유틸 ──
   function esc(str){
     return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
