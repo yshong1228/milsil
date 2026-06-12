@@ -2,7 +2,7 @@
 var GAMES = typeof _GAMES_DATA !== 'undefined' ? _GAMES_DATA : [];
 var openRecs = new Set();
 var IS_FILE_PROTOCOL = window.location.protocol === 'file:';
-var FIRESTORE_POLL_MS = IS_FILE_PROTOCOL ? 6000 : 12000;
+var FIRESTORE_POLL_MS = IS_FILE_PROTOCOL ? 6000 : 60000;
 var firestoreBindings = {};
 var LOCAL_DB_PREFIX = 'milsil_localdb_v2_';
 var __memoryLocalStore = {};
