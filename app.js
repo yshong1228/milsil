@@ -312,9 +312,21 @@ function setSort(o){
 function setFilter(f){
   filterMode=f;
   document.getElementById('filterAll').className='f-btn'+(f==='all'?' active':'');
+  var recBtn=document.getElementById('filterRecruiting');
+  if(recBtn) recBtn.className='f-btn'+(f==='recruiting'?' active':'');
   document.getElementById('filterUpcoming').className='f-btn'+(f==='upcoming'?' active':'');
   render();
 }
+// 모집중 판정 — cardHTML의 allFull 정의와 동일하게 유지
+function isEventFull(ev){
+  var parts=ev.participants||[];
+  var mP=parts.filter(function(p){return p.gender==='male';}).length;
+  var fP=parts.filter(function(p){return p.gender==='female';}).length;
+  var mFull=ev.male>0&&mP>=ev.male;
+  var fFull=ev.female>0&&fP>=ev.female;
+  return mFull&&fFull;
+}
+function isRecruiting(ev){return !isPast(ev.date)&&!isEventFull(ev);}
 function toggleCard(id){
   var card=document.getElementById('card_'+id);
   if(!card)return;
@@ -526,9 +538,13 @@ function fmtTime(t){
 
 function render(){
   var list=document.getElementById('eventList');
-  var filtered=filterMode==='upcoming'?events.filter(function(e){return !isPast(e.date);}):events;
+  var filtered;
+  if(filterMode==='upcoming') filtered=events.filter(function(e){return !isPast(e.date);});
+  else if(filterMode==='recruiting') filtered=events.filter(isRecruiting);
+  else filtered=events;
   if(!filtered.length){
-    list.innerHTML='<div class="empty"><span class="empty-icon">\ud83d\udcdc</span>'+(filterMode==='upcoming'?'\uc608\uc815\ub41c \ud000\uc2a4\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.':'\uac8c\uc2dc\ub41c \uacf5\uace0\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.')+'<br>\uc0c1\ub2e8\uc758 <b>\uacf5\uace0 \uac8c\uc2dc</b>\ub85c \uccab \ud000\uc2a4\ud2b8\ub97c \ub4f1\ub85d\ud558\uc138\uc694.</div>';
+    var emptyMsg=filterMode==='recruiting'?'\ubaa8\uc9d1 \uc911\uc778 \ud000\uc2a4\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.':filterMode==='upcoming'?'\uc608\uc815\ub41c \ud000\uc2a4\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.':'\uac8c\uc2dc\ub41c \uacf5\uace0\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.';
+    list.innerHTML='<div class="empty"><span class="empty-icon">\ud83d\udcdc</span>'+emptyMsg+'<br>\uc0c1\ub2e8\uc758 <b>\uacf5\uace0 \uac8c\uc2dc</b>\ub85c \uccab \ud000\uc2a4\ud2b8\ub97c \ub4f1\ub85d\ud558\uc138\uc694.</div>';
     return;
   }
   var sorted=filtered.slice().sort(function(a,b){
