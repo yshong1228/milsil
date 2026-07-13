@@ -1148,6 +1148,10 @@ function _bindReviewsQuery(){
       queueRender('members');
       queueRender('memberDetail');
     }
+    // 게임찾기의 평균점수 배지·미플레이 회원 목록이 리뷰에서 파생되므로 함께 갱신
+    if(_isTabActive('findgame-page')){
+      queueRender('finderResults');
+    }
   },function(err){
     console.error('reviews sync failed',err);
   });
@@ -2098,8 +2102,46 @@ function renderMemberDetail(){
 // ══════ 게임 찾기 탭 ══════
 var selectedFinderMembers=new Set();
 var _finderUnknownOpen=false;
-var _finderTotal=1;
+var _finderTotal=0;
 var _finderDropdownOpen=false;
+var _finderOpenGames=new Set();
+
+// 속성값 이스케이프 — escR은 &<>만 처리하므로 따옴표까지 막는다
+function escAttr(s){
+  return escR(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function finderScoreClass(s){
+  return s>=8?'s-great':s>=6.5?'s-good':s>=5?'s-mid':s>=3?'s-low':'s-bad';
+}
+// 해당 게임을 아직 플레이하지 않은 회원 목록 (명부 기준)
+function getNotPlayedMembers(gameName){
+  var idx=getPlayedGamesByMember();
+  var all=getAllMemberNames();
+  var seen={},out=[];
+  for(var i=0;i<all.length;i++){
+    var canon=canonicalMemberName(all[i]);
+    if(!canon||canon==='미참여 인원')continue;
+    if(seen[canon])continue;
+    seen[canon]=1;
+    var played=idx[canon];
+    if(played&&played.has(gameName))continue;
+    out.push(canon);
+  }
+  out.sort(function(a,b){return a.localeCompare(b,'ko');});
+  return out;
+}
+function toggleFinderGame(name){
+  // 재렌더로 DOM이 교체되므로, 키보드로 연 행은 포커스를 되돌려준다
+  var ae=document.activeElement;
+  var wasFocused=!!(ae&&ae.getAttribute&&ae.getAttribute('data-finder-game')===name);
+  if(_finderOpenGames.has(name))_finderOpenGames.delete(name);
+  else _finderOpenGames.add(name);
+  renderFinderResults();
+  if(wasFocused){
+    var next=document.querySelector('[data-finder-game="'+String(name).replace(/"/g,'\\"')+'"]');
+    if(next)next.focus();
+  }
+}
 
 function parsePlayersField(text){
   var raw=String(text||'').trim();
@@ -2138,10 +2180,13 @@ function getPlayerRange(gameName,playersText){
 function updateFinderTotalDisplay(){
   var el=document.getElementById('finderTotalVal');
   if(el)el.textContent=String(_finderTotal);
+  var hint=document.getElementById('finderTotalHint');
+  if(hint)hint.textContent=_finderTotal===0?'0명 = 전체 게임 보기':'비회원 포함 가능';
 }
 function adjustFinderTotal(delta){
   var next=_finderTotal+delta;
-  var floor=Math.max(1,selectedFinderMembers.size);
+  // 0 = 전체 게임 보기. 회원을 고른 상태면 그 인원수가 하한.
+  var floor=Math.max(0,selectedFinderMembers.size);
   if(next<floor)next=floor;
   if(next===_finderTotal)return;
   _finderTotal=next;
@@ -2247,13 +2292,13 @@ function removeFinderMember(name){
   debouncedRenderFinderResults();
 }
 function clearFinderSelection(){
-  var hadAny=selectedFinderMembers.size>0;
   selectedFinderMembers.clear();
-  _finderTotal=1;
+  _finderTotal=0;
   updateFinderTotalDisplay();
   renderFinderChips();
   if(_finderDropdownOpen)renderFinderDropdown();
-  if(hadAny)renderFinderResults();
+  // 총인원까지 0으로 되돌리므로 선택 회원이 없었어도 반드시 다시 그린다
+  renderFinderResults();
 }
 function toggleFinderUnknown(){
   _finderUnknownOpen=!_finderUnknownOpen;
@@ -2271,6 +2316,41 @@ function _finderRangeSortKey(range,dir){
   if(dir==='asc')return range.min;
   return range.max===Infinity?1e9:range.max;
 }
+// 게임 1행 렌더 — 평균점수 배지 + 클릭 시 미플레이 회원 전개
+function finderGameItemHTML(game,playersFallback){
+  var name=game.name;
+  var open=_finderOpenGames.has(name);
+  var p=game.players||playersFallback||'';
+  var avg=getGameAvg(name);
+  var scoreCls=avg>0?finderScoreClass(avg):'s-none';
+  var scoreTxt=avg>0?avg.toFixed(1):'—';
+
+  var panel='';
+  if(open){
+    var notPlayed=getNotPlayedMembers(name);
+    var chips=notPlayed.map(function(m){
+      var color=getRoleColor(getRoles(m)[0]||'')||'var(--gold)';
+      return '<span class="finder-np-chip" style="border-color:'+color+'aa;color:'+color+'">'+escR(m)+'</span>';
+    }).join('');
+    panel='<div class="finder-notplayed">'
+      +'<div class="finder-np-head">미플레이 회원 '+notPlayed.length+'명</div>'
+      +(notPlayed.length
+        ?'<div class="finder-np-chips">'+chips+'</div>'
+        :'<div class="finder-np-empty">전원이 이 게임을 플레이했습니다.</div>')
+      +'</div>';
+  }
+
+  return '<div class="finder-game-item'+(open?' open':'')+'">'
+    +'<div class="finder-game-row" data-finder-game="'+escAttr(name)+'" role="button" tabindex="0" aria-expanded="'+(open?'true':'false')+'">'
+    +'<div class="finder-game-name">'+escR(name)+'</div>'
+    +(p?'<div class="finder-game-players">'+escR(p)+'</div>':'')
+    +'<div class="finder-score '+scoreCls+'">'+scoreTxt+'</div>'
+    +'<span class="finder-game-chev">▸</span>'
+    +'</div>'
+    +panel
+    +'</div>';
+}
+
 function renderFinderResults(){
   var listEl=document.getElementById('finderList');
   var unknownSec=document.getElementById('finderUnknownSection');
@@ -2279,6 +2359,7 @@ function renderFinderResults(){
   if(!listEl)return;
 
   var N=_finderTotal;
+  var showAll=(N===0);
   var selCount=selectedFinderMembers.size;
   var qEl=document.getElementById('finderSearch');
   var sortEl=document.getElementById('finderSort');
@@ -2301,7 +2382,9 @@ function renderFinderResults(){
     if(!g||!g.name)continue;
     if(excluded.has(g.name))continue;
     var range=getPlayerRange(g.name,g.players);
-    if(range===null){unknown.push({game:g,range:null});}
+    // 0명 = 인원 필터 해제 → 인원 표기 불명 게임까지 전부 본목록에 넣는다
+    if(showAll){normal.push({game:g,range:range});}
+    else if(range===null){unknown.push({game:g,range:null});}
     else if(range.min<=N && N<=range.max){normal.push({game:g,range:range});}
   }
 
@@ -2314,35 +2397,28 @@ function renderFinderResults(){
   if(sortKey==='game-desc')sorter=function(a,b){return b.game.name.localeCompare(a.game.name,'ko');};
   else if(sortKey==='players-asc')sorter=function(a,b){return _finderRangeSortKey(a.range,'asc')-_finderRangeSortKey(b.range,'asc');};
   else if(sortKey==='players-desc')sorter=function(a,b){return _finderRangeSortKey(b.range,'desc')-_finderRangeSortKey(a.range,'desc');};
+  else if(sortKey==='score-desc')sorter=function(a,b){
+    var d=getGameAvg(b.game.name)-getGameAvg(a.game.name);
+    return d!==0?d:a.game.name.localeCompare(b.game.name,'ko');
+  };
   else sorter=function(a,b){return a.game.name.localeCompare(b.game.name,'ko');};
   normal.sort(sorter);
   unknown.sort(function(a,b){return a.game.name.localeCompare(b.game.name,'ko');});
 
   if(normal.length===0){
     if(query)listEl.innerHTML='<div class="finder-empty-state">\''+escR(query)+'\' 검색 결과 없음. 검색어를 바꾸거나 인원을 조정하세요.</div>';
+    else if(showAll)listEl.innerHTML='<div class="finder-empty-state">등록된 게임이 없습니다.</div>';
     else if(selCount>0)listEl.innerHTML='<div class="finder-empty-state">총 '+N+'명(회원 '+selCount+'명 선택)이 함께 즐길 수 있는 미플레이 게임이 없습니다.</div>';
     else listEl.innerHTML='<div class="finder-empty-state">총 '+N+'명이 즐길 수 있는 게임이 없습니다.</div>';
   }else{
-    listEl.innerHTML=normal.map(function(x){
-      var p=x.game.players||'';
-      return '<div class="finder-game-row">'
-        +'<div class="finder-game-name">'+escR(x.game.name)+'</div>'
-        +(p?'<div class="finder-game-players">'+escR(p)+'</div>':'')
-        +'</div>';
-    }).join('');
+    listEl.innerHTML=normal.map(function(x){return finderGameItemHTML(x.game,'');}).join('');
   }
 
   if(unknown.length>0 && unknownSec){
     unknownSec.removeAttribute('hidden');
     if(unknownLabel)unknownLabel.textContent='⚠ 인원 표기 불명 ('+unknown.length+')';
     if(unknownBody){
-      unknownBody.innerHTML=unknown.map(function(x){
-        var p=x.game.players||'(표기 없음)';
-        return '<div class="finder-game-row">'
-          +'<div class="finder-game-name">'+escR(x.game.name)+'</div>'
-          +'<div class="finder-game-players">'+escR(p)+'</div>'
-          +'</div>';
-      }).join('');
+      unknownBody.innerHTML=unknown.map(function(x){return finderGameItemHTML(x.game,'(표기 없음)');}).join('');
     }
   }else if(unknownSec){
     unknownSec.setAttribute('hidden','');
@@ -2365,10 +2441,23 @@ document.addEventListener('click',function(e){
     removeFinderMember(rmBtn.getAttribute('data-finder-remove'));
     return;
   }
+  var gameRow=e.target.closest('[data-finder-game]');
+  if(gameRow){
+    closeFinderDropdown();
+    toggleFinderGame(gameRow.getAttribute('data-finder-game'));
+    return;
+  }
   if(_finderDropdownOpen){
     var wrap=document.getElementById('finderDropdownWrap');
     if(wrap && !wrap.contains(e.target))closeFinderDropdown();
   }
+});
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter' && e.key!==' ')return;
+  var gameRow=e.target.closest && e.target.closest('[data-finder-game]');
+  if(!gameRow)return;
+  e.preventDefault();
+  toggleFinderGame(gameRow.getAttribute('data-finder-game'));
 });
 
 window._finder={
