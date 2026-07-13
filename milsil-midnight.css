@@ -133,7 +133,6 @@ input::placeholder, textarea::placeholder{ color:var(--mt-bone-faint) !important
 /* ── 12. 작은 태그/통계 색 보정 ── */
 .stat-val, .scroll-title, .section-head-label{ color:var(--mt-brass-lt) !important; }
 .owner-tag, .parti-count, .finder-game-players, .firebase-tag{ background:var(--mt-ink-2) !important; color:var(--mt-bone) !important; border-color:var(--border) !important; }
-
 /* ── 13. 텍스트/아이콘 가독성 보정 (다크 위 저대비 글자) ── */
 /* 네이티브 컨트롤(달력·시계·드롭다운 화살표)도 다크 스킴으로 */
 input, textarea, select{ color-scheme:dark; }
