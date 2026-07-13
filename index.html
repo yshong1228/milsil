@@ -929,11 +929,11 @@ window._onAuthReady = function(user) {
     <label class="finder-total-label">총 인원</label>
     <div class="finder-stepper" role="group" aria-label="총 인원 조절">
       <button type="button" class="finder-step-btn" onclick="adjustFinderTotal(-1)" aria-label="감소">−</button>
-      <span class="finder-step-val" id="finderTotalVal">1</span>
+      <span class="finder-step-val" id="finderTotalVal">0</span>
       <span class="finder-step-unit">명</span>
       <button type="button" class="finder-step-btn" onclick="adjustFinderTotal(1)" aria-label="증가">+</button>
     </div>
-    <span class="finder-total-hint">비회원 포함 가능</span>
+    <span class="finder-total-hint" id="finderTotalHint">0명 = 전체 게임 보기</span>
   </div>
   <div class="finder-dropdown-wrap" id="finderDropdownWrap">
     <input type="text" class="finder-dropdown-input" id="finderDropdownInput" placeholder="회원 추가 (이름 검색)..." oninput="handleFinderDropdownInput()" onfocus="openFinderDropdown()" autocomplete="off">
@@ -950,6 +950,7 @@ window._onAuthReady = function(user) {
       <select class="rec-select" id="finderSort" onchange="renderFinderResults()">
         <option value="game-asc">이름 오름순</option>
         <option value="game-desc">이름 내림순</option>
+        <option value="score-desc">평점 높은 순</option>
         <option value="players-asc">인원 적은 순</option>
         <option value="players-desc">인원 많은 순</option>
       </select>
