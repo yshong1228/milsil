@@ -1352,11 +1352,12 @@ function escR(s){
 }
 
 var _filterTimer=null;
+var _renderedGames=[];
 function debouncedFilterGames(){
   if(_filterTimer)clearTimeout(_filterTimer);
-  _filterTimer=setTimeout(function(){_filterTimer=null;filterGames();},180);
+  _filterTimer=setTimeout(function(){_filterTimer=null;filterGames(true);},80);
 }
-function filterGames(){
+function filterGames(searchOnly){
   var q=(document.getElementById('recSearch').value||'').trim().toLowerCase();
   var sort=document.getElementById('recSort').value;
   var diff=document.getElementById('recDiff').value;
@@ -1388,31 +1389,76 @@ function filterGames(){
     });
   }
 
-  renderGames(list);
+  renderGames(list,!!searchOnly);
 }
-function renderGames(list){
+function renderGames(list,searchOnly){
   var el=document.getElementById('gameList');
   if(!el)return;
+  if(searchOnly&&_renderedGames.length&&el.querySelectorAll('.game-card').length===_renderedGames.length){
+    filterRenderedGames(list);
+    return;
+  }
   if(!list.length){
     el.innerHTML='<div class="empty"><span class="empty-icon">\ud83d\udcdc</span>\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.</div>';
     return;
   }
   // 입력 중인 리뷰 폼 감지 - 입력값이 있으면 재렌더 스킵
-  var activeInputs=el.querySelectorAll('input[type="text"],input[type="number"]');
-  for(var i=0;i<activeInputs.length;i++){
-    if(activeInputs[i].value.trim()){
-      return; // 입력 중 → 재렌더 생략
+  if(!searchOnly){
+    var activeInputs=el.querySelectorAll('input[type="text"],input[type="number"]');
+    for(var i=0;i<activeInputs.length;i++){
+      if(activeInputs[i].value.trim()){
+        return; // 입력 중 → 재렌더 생략
+      }
     }
   }
   // 열린 카드/폼 상태 저장
   var openCards=[];
   var openForms=[];
-  el.querySelectorAll('.game-card.open-rec').forEach(function(card){openCards.push(card.id);});
-  el.querySelectorAll('.review-form.open').forEach(function(form){openForms.push(form.id);});
-  el.innerHTML=list.map(function(g,i){return gameCardHTML(g,i);}).join('');
+  el.querySelectorAll('.game-card.open-rec').forEach(function(card){
+    var title=card.querySelector('.game-title');
+    if(title)openCards.push(title.textContent);
+  });
+  el.querySelectorAll('.review-form.open').forEach(function(form){
+    var card=form.closest('.game-card');
+    var title=card&&card.querySelector('.game-title');
+    if(title)openForms.push(title.textContent);
+  });
+  el.innerHTML=list.map(function(g,i){return gameCardHTML(g,i);}).join('')
+    +'<div class="empty game-search-empty" hidden><span class="empty-icon">\ud83d\udcdc</span>\uc870\uac74\uc5d0 \ub9de\ub294 \uae30\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.</div>';
+  _renderedGames=list.slice();
   // 열린 상태 복원
-  openCards.forEach(function(id){var el2=document.getElementById(id);if(el2)el2.classList.add('open-rec');});
-  openForms.forEach(function(id){var el2=document.getElementById(id);if(el2)el2.classList.add('open');});
+  openCards.forEach(function(name){
+    var rank=_renderedGames.findIndex(function(g){return g.name===name;});
+    var card=document.getElementById('rec_'+rank);
+    if(card){
+      renderGameDetail(card,_renderedGames[rank],rank);
+      card.classList.add('open-rec');
+    }
+  });
+  openForms.forEach(function(name){
+    var rank=_renderedGames.findIndex(function(g){return g.name===name;});
+    var form=document.getElementById('rvf_'+rank);
+    if(form)form.classList.add('open');
+  });
+}
+function filterRenderedGames(list){
+  var el=document.getElementById('gameList');
+  var matched={};
+  var rank=0;
+  list.forEach(function(g){matched[g.name]=true;});
+  _renderedGames.forEach(function(g,i){
+    var card=document.getElementById('rec_'+i);
+    if(!card)return;
+    var isMatch=!!matched[g.name];
+    card.hidden=!isMatch;
+    if(isMatch){
+      rank+=1;
+      var rankEl=card.querySelector('.rank-num');
+      if(rankEl)rankEl.textContent=rank;
+    }
+  });
+  var empty=el&&el.querySelector('.game-search-empty');
+  if(empty)empty.hidden=rank>0;
 }
 function diffOptionsHTML(selected){
   var cur=parseInt(selected,10)||0;
@@ -1429,11 +1475,22 @@ function gameCardHTML(g,rank){
   var scoreCls=avg>0?scoreClass(avg):'s-bad';
   var rCls=rank===0?'gold':rank===1?'silver':rank===2?'bronze':'';
   var fbTag=g.fromFirebase?'<span class="firebase-tag">✦ 추가됨</span>':'';
-  var editDel=g.fromFirebase
-    ?'<button class="f-act" onclick="editGameByCard(this,event)">✒ 수정</button><button class="f-act danger" onclick="deleteGameByCard(this,event)">✕ 삭제</button>'
-    :'';
-
-  var rvs=_gameRvs.slice().sort(function(a,b){
+  return '<div class="game-card" id="rec_'+rank+'" data-fbid="'+(g.id||'')+'">'
+    +'<div class="game-summary" onclick="toggleRec('+rank+')">'
+    +'<span class="rank-num '+rCls+'">'+(rank+1)+'</span>'
+    +'<div class="score-ring '+scoreCls+'">'+(avg>0?avg.toFixed(1):'?')+'</div>'
+    +'<div class="game-meta-col">'
+    +'<div class="game-name-row"><span class="game-title">'+escR(g.name)+'</span>'+(diffStr?'<span class="diff-stars">'+escR(diffStr)+'</span>':'')+fbTag+'</div>'
+    +'<div class="game-info-row">'+(g.owner?'<span class="owner-tag">✦ '+escR(g.owner)+'</span>':'')+(g.players?'<span class="g-info">'+escR(g.players)+'</span>':'')+'<span class="g-info">리뷰 '+rvCount+'개</span></div>'
+    +'</div>'
+    +'<div class="game-right"><svg class="chevron-rune" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+    +'</div>'
+    +'<div class="game-detail"></div>'
+    +'</div>';
+}
+function gameDetailHTML(g,rank){
+  var diffStr=getGameDiffString(g.name);
+  var rvs=getReviewsFor(g.name).slice().sort(function(a,b){
     return stampToMs(b.createdAt)-stampToMs(a.createdAt);
   });
 
@@ -1467,18 +1524,10 @@ function gameCardHTML(g,rank){
       }).join('');
 
   var gname=g.name.replace(/'/g,"\\'");
-  return '<div class="game-card" id="rec_'+rank+'" data-fbid="'+(g.id||'')+'">'
-    +'<div class="game-summary" onclick="toggleRec('+rank+')">'
-    +'<span class="rank-num '+rCls+'">'+(rank+1)+'</span>'
-    +'<div class="score-ring '+scoreCls+'">'+(avg>0?avg.toFixed(1):'?')+'</div>'
-    +'<div class="game-meta-col">'
-    +'<div class="game-name-row"><span class="game-title">'+escR(g.name)+'</span>'+(diffStr?'<span class="diff-stars">'+escR(diffStr)+'</span>':'')+fbTag+'</div>'
-    +'<div class="game-info-row">'+(g.owner?'<span class="owner-tag">✦ '+escR(g.owner)+'</span>':'')+(g.players?'<span class="g-info">'+escR(g.players)+'</span>':'')+'<span class="g-info">리뷰 '+rvCount+'개</span></div>'
-    +'</div>'
-    +'<div class="game-right"><svg class="chevron-rune" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
-    +'</div>'
-    +'<div class="game-detail">'
-    +'<div class="game-review-section">'
+  var editDel=g.fromFirebase
+    ?'<div style="display:flex;justify-content:flex-end;gap:6px;padding:8px 14px;border-top:1px solid #1e1608"><button class="f-act" onclick="editGameByCard(this,event)">✒ 수정</button><button class="f-act danger" onclick="deleteGameByCard(this,event)">✕ 삭제</button></div>'
+    :'';
+  return '<div class="game-review-section">'
     +'<button class="write-review-btn" onclick="toggleReviewForm(\''+gname+'\','+rank+',event)">✒ 리뷰 작성</button>'
     +'<div class="review-form" id="rvf_'+rank+'" data-gname="'+escR(g.name)+'" data-rank="'+rank+'">'
     +'<div class="review-form-row">'
@@ -1493,8 +1542,13 @@ function gameCardHTML(g,rank){
     +'</div></div>'
     +'<div class="review-list">'+rvHTML+'</div>'
     +'</div>'
-    +(editDel?'<div style="display:flex;justify-content:flex-end;gap:6px;padding:8px 14px;border-top:1px solid #1e1608">'+editDel+'</div>':'')
-    +'</div></div>';
+    +editDel;
+}
+function renderGameDetail(card,g,rank){
+  var detail=card&&card.querySelector('.game-detail');
+  if(!detail||!g||detail.getAttribute('data-loaded')==='1')return;
+  detail.innerHTML=gameDetailHTML(g,rank);
+  detail.setAttribute('data-loaded','1');
 }
 async function toggleSpoilerOnReview(checkbox,reviewId){
   if(!reviewId)return;
@@ -1513,6 +1567,7 @@ function toggleRec(rank){
     card.classList.remove('open-rec');
     card.classList.remove('just-opened');
   }else{
+    renderGameDetail(card,_renderedGames[rank],rank);
     card.classList.add('open-rec');
     card.classList.add('just-opened');
     setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
@@ -2496,6 +2551,3 @@ window._finder={
     };
   }
 };
-
-
-
