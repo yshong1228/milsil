@@ -55,7 +55,7 @@ body::before{ background:none !important; }
 /* ── 3. 카드/패널 그라운드 (하드코딩된 #faf7f0 / #fff 류) ── */
 .form-scroll, .rec-form-card, .stat-box,
 .member-card-btn, .member-detail, .pw-modal, .link-modal,
-.finder-unknown-header, .finder-game-row, .role-select-panel,
+.finder-unknown-header, .finder-game-row, .finder-notplayed, .role-select-panel,
 .cfile-wrap, .cfile-header, .cfile-section, .cfile-sec-body,
 .pedit-modal, .pedit-avatar-section, .review-item, .member-game-row,
 .review-form, .game-review-section{
@@ -107,11 +107,16 @@ input::placeholder, textarea::placeholder{ color:var(--mt-bone-faint) !important
 }
 
 /* ── 9. 점수 링 (라이트 파스텔 → 다크 틴트) ── */
-.score-ring.s-great{ background:color-mix(in srgb,#74c48e 14%,#16100f) !important; color:#74c48e !important; border-color:#74c48e !important; }
-.score-ring.s-good { background:color-mix(in srgb,#a6c46e 14%,#16100f) !important; color:#a6c46e !important; border-color:#a6c46e !important; }
-.score-ring.s-mid  { background:color-mix(in srgb,#d9b878 14%,#16100f) !important; color:#d9b878 !important; border-color:#d9b878 !important; }
-.score-ring.s-low  { background:color-mix(in srgb,#d98a4a 14%,#16100f) !important; color:#d98a4a !important; border-color:#d98a4a !important; }
-.score-ring.s-bad  { background:color-mix(in srgb,#c0392b 14%,#16100f) !important; color:#c0392b !important; border-color:#c0392b !important; }
+.score-ring.s-great, .finder-score.s-great{ background:color-mix(in srgb,#74c48e 14%,#16100f) !important; color:#74c48e !important; border-color:#74c48e !important; }
+.score-ring.s-good, .finder-score.s-good { background:color-mix(in srgb,#a6c46e 14%,#16100f) !important; color:#a6c46e !important; border-color:#a6c46e !important; }
+.score-ring.s-mid, .finder-score.s-mid  { background:color-mix(in srgb,#d9b878 14%,#16100f) !important; color:#d9b878 !important; border-color:#d9b878 !important; }
+.score-ring.s-low, .finder-score.s-low  { background:color-mix(in srgb,#d98a4a 14%,#16100f) !important; color:#d98a4a !important; border-color:#d98a4a !important; }
+.score-ring.s-bad, .finder-score.s-bad  { background:color-mix(in srgb,#c0392b 14%,#16100f) !important; color:#c0392b !important; border-color:#c0392b !important; }
+.finder-score.s-none{ background:var(--mt-ink-2) !important; color:var(--mt-bone-faint) !important; border-color:var(--border) !important; }
+/* 미플레이 회원 칩 — 회원 칩과 동일한 다크 처리 */
+.finder-chip, .finder-np-chip{ background:rgba(217,184,120,.10) !important; }
+.finder-np-head{ color:var(--mt-bone-faint) !important; }
+.finder-np-empty{ color:var(--mt-bone-faint) !important; }
 
 /* ── 10. 파티 칩 / 슬롯 채움 (성별 → 좌석색) ── */
 .party-chip.male{ background:rgba(106,143,191,.14) !important; color:var(--mt-seat-lead) !important; border-color:rgba(106,143,191,.4) !important; }
