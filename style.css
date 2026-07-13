@@ -587,8 +587,26 @@ body::after{display:none}
 .finder-chip-name{padding-right:2px}
 .finder-chip-remove{width:20px;height:20px;border-radius:50%;border:0;background:transparent;color:inherit;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .finder-chip-remove:hover{background:rgba(0,0,0,0.08)}
+.finder-game-item{margin-bottom:6px}
 .finder-game-row{display:flex;align-items:center;gap:12px;padding:11px 14px;margin-bottom:6px;background:#faf7f0;border:1px solid var(--border);border-radius:2px;transition:border-color .2s,box-shadow .2s;box-shadow:1px 1px 0 rgba(160,144,112,0.15)}
+.finder-game-item .finder-game-row{margin-bottom:0;cursor:pointer}
 .finder-game-row:hover{border-color:var(--gold);box-shadow:1px 2px 0 rgba(139,105,20,0.2)}
+.finder-game-row:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.finder-game-chev{font-size:10px;color:var(--ink-faint);transition:transform .2s;flex-shrink:0}
+.finder-game-item.open .finder-game-chev{transform:rotate(90deg)}
+.finder-game-item.open .finder-game-row{border-color:var(--gold);border-bottom-color:transparent;border-radius:2px 2px 0 0;box-shadow:none}
+.finder-score{font-family:'Cinzel',serif;font-size:11px;font-weight:700;border:1px solid;border-radius:1px;padding:3px 7px;min-width:32px;text-align:center;white-space:nowrap;flex-shrink:0}
+.finder-score.s-great{border-color:#166534;color:#166534;background:#dcfce7}
+.finder-score.s-good{border-color:#15803d;color:#15803d;background:#d1fae5}
+.finder-score.s-mid{border-color:#92400e;color:#92400e;background:#fef3c7}
+.finder-score.s-low{border-color:#c2410c;color:#c2410c;background:#ffedd5}
+.finder-score.s-bad{border-color:#991b1b;color:#991b1b;background:#fee2e2}
+.finder-score.s-none{border-color:var(--border);color:var(--ink-faint);background:#f0e8d8}
+.finder-notplayed{background:#f5f0e4;border:1px solid var(--gold);border-top:0;border-radius:0 0 2px 2px;padding:10px 12px}
+.finder-np-head{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.5px;color:var(--ink-dim);margin-bottom:8px}
+.finder-np-chips{display:flex;flex-wrap:wrap;gap:5px}
+.finder-np-chip{display:inline-flex;align-items:center;padding:3px 9px;background:#faf7f0;border:1px solid var(--gold);border-radius:12px;font-family:'Noto Serif KR',serif;font-size:11px;font-weight:600;color:var(--gold-dark)}
+.finder-np-empty{font-size:12px;color:var(--ink-faint);font-style:italic;font-family:'Noto Serif KR',serif}
 .finder-game-name{flex:1;min-width:0;font-family:'Noto Serif KR',serif;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .finder-game-players{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.3px;background:#f0e8d8;border:1px solid var(--border);border-radius:1px;padding:3px 8px;color:var(--ink-dim);white-space:nowrap;flex-shrink:0}
 .finder-empty-state{text-align:center;padding:24px 16px;color:var(--ink-faint);font-size:13px;font-style:italic;font-family:'Noto Serif KR',serif}
